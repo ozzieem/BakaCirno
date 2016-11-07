@@ -1,0 +1,20 @@
+﻿- Add fire to bulletstart position
+- Add powerups? Killing enough enemies give powerups. 
+  Change power of playerbullets depending on how much power player has
+- Change Icon Image?
+- Rework TextOverlay class so text can be changed and placed individually (?)
+- Add a real highscore which saves scores and names to a file
+- Add Lifepoints text next to enemies?
+- (Change position of score, Time and Enemies killed text?)
+
+DONE:
+D: Highscore	(Temporary highscore for now)
+D: Music & Soundeffects
+D: Menu
+D: New sprites
+D: Gamestate implementation
+D: Fired bullets still keeping in range of player.x coordinates
+D: Maybe add enemyBullet list to game1 to prevent removing bullets upon death
+D: Maybe bullet following player x-position type of shot?
+	https://scratch.mit.edu/studios/475486/
+
