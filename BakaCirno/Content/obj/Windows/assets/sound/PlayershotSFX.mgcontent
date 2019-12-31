@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PipelineBuildEvent xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SourceFile>E:/Users/Ozzie/Documents/--DNR--/BakaCirno/BakaCirno/Content/assets/sound/PlayershotSFX.wav</SourceFile>
+  <SourceTime>2015-12-08T00:05:29+01:00</SourceTime>
+  <DestFile>E:/Users/Ozzie/Documents/--DNR--/BakaCirno/BakaCirno/Content/bin/Windows/assets/sound/PlayershotSFX.xnb</DestFile>
+  <DestTime>2019-12-31T19:25:56.3616612+01:00</DestTime>
+  <Importer>WavImporter</Importer>
+  <ImporterTime>2017-03-01T16:05:36+01:00</ImporterTime>
+  <Processor>SoundEffectProcessor</Processor>
+  <ProcessorTime>2017-03-01T16:05:36+01:00</ProcessorTime>
+  <Parameters>
+    <Key>Quality</Key>
+    <Value>Best</Value>
+  </Parameters>
+  <Dependencies />
+  <BuildAsset />
+  <BuildOutput />
+</PipelineBuildEvent>
