@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace GameProjectOOP
+namespace BakaCirno
 {
     /// <summary>
     ///     This is the main type for your game.

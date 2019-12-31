@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GameProjectOOP
+namespace BakaCirno
 {
 #if WINDOWS || LINUX
     /// <summary>

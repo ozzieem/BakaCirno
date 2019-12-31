@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace GameProjectOOP
+namespace BakaCirno
 {
     /// <summary>
     ///     This class represents the circle-bulletpattern which spawns bullets of circles

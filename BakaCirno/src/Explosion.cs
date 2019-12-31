@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace GameProjectOOP
+namespace BakaCirno
 {
     /// <summary>
     ///     Explosion class mainly for enemies at the moment

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace GameProjectOOP
+namespace BakaCirno
 {
     /// <summary>
     ///     The class for the points that fall towards the player when enemies are beaten.

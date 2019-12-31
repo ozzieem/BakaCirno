@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace GameProjectOOP
+namespace BakaCirno
 {
     /// <summary>
     ///     The base class for the bullets in the game. Every bulletpattern uses this class

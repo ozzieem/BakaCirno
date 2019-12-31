@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace GameProjectOOP
+namespace BakaCirno
 {
     /// <summary>
     ///     Spawns bullets that fires in a snapshotted direction of the player, randomly scattered
