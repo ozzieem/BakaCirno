@@ -14,10 +14,9 @@ var power_shot_texture: Texture2D
 var current_bullet_texture: Texture2D
 
 # Player properties
-var movement_speed: float = 8.0 * 60.0 # Adjusted for delta time
-var bullet_speed: int = 15 * 60 # Adjusted for delta time
-var max_bullet_delay: float = 0.083 # ~5 frames at 60fps converted to seconds
-var bullet_delay: float = 0.0
+var movement_speed: float = 360.0 # pixels per second
+var bullet_speed: int = 240 # pixels per second
+var max_bullet_delay: float = 0.25 # seconds between shots
 
 # Player states
 var is_colliding: bool = false
@@ -36,6 +35,9 @@ var death_duration: float = 1.5 # 1500ms converted to seconds
 
 # Bullet management
 var bullets: Array[Bullet] = []
+
+# Bullet delay timer
+var bullet_delay_timer: float = 0.0
 
 # Node references
 @onready var sprite: Sprite2D = $Sprite2D
@@ -56,6 +58,9 @@ func _ready():
 
 	# Set initial position
 	position = Vector2(425, 725)
+
+	# Initialize bullet delay timer
+	bullet_delay_timer = max_bullet_delay
 
 	# Load assets
 	load_player_assets()
@@ -138,9 +143,9 @@ func _process(delta):
 		if death_timer >= death_duration:
 			is_dead = true
 
-	# Update bullet delay
-	if bullet_delay > 0:
-		bullet_delay -= delta
+	# Update bullet delay timer
+	if bullet_delay_timer > 0:
+		bullet_delay_timer -= delta
 
 func handle_input():
 	if is_colliding:
@@ -179,13 +184,18 @@ func handle_input():
 	power_shot = Input.is_action_pressed("power_shot")
 
 func shoot():
-	if bullet_delay <= 0:
+	# Choose bullet texture based on power shot
+	current_bullet_texture = power_shot_texture if power_shot else bullet_texture
+
+	# Decrease bullet delay timer
+	if bullet_delay_timer > 0:
+		bullet_delay_timer -= get_process_delta_time()
+
+	# Check if we can shoot
+	if bullet_delay_timer <= 0:
 		# Play shoot sound
 		if sound_manager:
 			sound_manager.play_player_shoot()
-
-		# Choose bullet texture
-		current_bullet_texture = power_shot_texture if power_shot else bullet_texture
 
 		# Create bullet
 		var bullet = preload("res://Bullet.tscn").instantiate()
@@ -199,15 +209,29 @@ func shoot():
 		bullet.set_bullet_type(true) # Mark as player bullet
 		bullets.append(bullet)
 
-		# Reset delay
-		bullet_delay = max_bullet_delay
+		# Reset delay timer
+		bullet_delay_timer = max_bullet_delay
 
 func update_bullets(delta):
-	# Remove bullets that are no longer visible
+	# Update each bullet (similar to C# version)
+	for bullet in bullets:
+		if bullet and is_instance_valid(bullet):
+			# Update bullet collision box (similar to C# boundingBox update)
+			# This would be handled by the bullet's own collision system in Godot
+			# Move bullet upward (bullet.position.Y -= bullet.speed in C#)
+			bullet.position.y -= bullet_speed * delta
+
+			# Keep bullets aligned with player X-axis (similar to C# version)
+			# Bullets keep in range within player y-axis
+			var difference = position - bullet.position
+			difference = difference.normalized()
+			bullet.position.x += difference.x * delta * 1000.0 # Convert milliseconds factor from C#
+
+	# Remove bullets that are no longer visible (same as C# version)
 	for i in range(bullets.size() - 1, -1, -1):
 		var bullet = bullets[i]
-		if not bullet or not bullet.is_visible:
-			if bullet:
+		if not bullet or not is_instance_valid(bullet) or not bullet.is_visible:
+			if bullet and is_instance_valid(bullet):
 				bullet.queue_free()
 			bullets.remove_at(i)
 
@@ -289,6 +313,13 @@ func reset_animation():
 	current_anim_texture = idle_anim_texture
 	current_frame = 0
 	animation_elapsed = 0.0
+
+func clear_bullets():
+	# Clear all player bullets (useful for game reset)
+	for bullet in bullets:
+		if bullet and is_instance_valid(bullet):
+			bullet.queue_free()
+	bullets.clear()
 
 func take_damage():
 	if not is_colliding:

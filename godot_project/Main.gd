@@ -194,10 +194,7 @@ func reset_game():
 	player.reset_animation()
 
 	# Clear player bullets
-	for bullet in player.bullets:
-		if bullet and is_instance_valid(bullet):
-			bullet.queue_free()
-	player.bullets.clear()
+	player.clear_bullets()
 
 	# Clear game objects
 	clear_enemies()
