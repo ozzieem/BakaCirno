@@ -1,0 +1,20 @@
+{
+  "name": "bakacirno-formatting",
+  "version": "1.0.0",
+  "description": "Formatting configuration for BakaCirno game project",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:cs": "dotnet format",
+    "format:gd": "prettier --write \"**/*.gd\"",
+    "format:json": "prettier --write \"**/*.json\"",
+    "format:md": "prettier --write \"**/*.md\"",
+    "lint": "npm run format:check"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch BakaCirno (MonoGame)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/BakaCirno/bin/Debug/BakaCirno.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/BakaCirno",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "preLaunchTask": "build"
+    },
+    {
+      "name": "Attach to Godot",
+      "type": "godot",
+      "request": "launch",
+      "project": "${workspaceFolder}",
+      "port": 6007,
+      "address": "127.0.0.1",
+      "launch_game_instance": true,
+      "launch_scene": false
+    }
+  ]
+}

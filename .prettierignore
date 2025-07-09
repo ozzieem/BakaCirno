@@ -1,0 +1,57 @@
+# Prettier ignore file
+# Add files and directories that should not be formatted
+
+# Build directories
+**/bin/
+**/obj/
+**/build/
+**/dist/
+
+# Dependencies
+node_modules/
+**/packages/
+
+# IDE and editor files
+.vs/
+.vscode/settings.json
+*.user
+*.suo
+*.cache
+
+# Godot specific
+.godot/
+.import/
+export_presets.cfg
+
+# MonoGame content
+Content/bin/
+Content/obj/
+*.mgcb
+*.xnb
+
+# Executables and binaries
+*.exe
+*.dll
+*.pdb
+*.application
+*.manifest
+
+# Assets that shouldn't be formatted
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.wav
+*.mp3
+*.ogg
+*.pfx
+*.ico
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Platform specific
+Thumbs.db
+.DS_Store

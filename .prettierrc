@@ -1,0 +1,59 @@
+{
+    "semi": true,
+    "trailingComma": "es5",
+    "singleQuote": false,
+    "printWidth": 100,
+    "tabWidth": 4,
+    "useTabs": false,
+    "bracketSpacing": true,
+    "bracketSameLine": false,
+    "arrowParens": "avoid",
+    "endOfLine": "lf",
+    "overrides": [
+        {
+            "files": "*.gd",
+            "options": {
+                "tabWidth": 4,
+                "printWidth": 88,
+                "useTabs": true
+            }
+        },
+        {
+            "files": "*.cs",
+            "options": {
+                "tabWidth": 4,
+                "printWidth": 120,
+                "useTabs": false
+            }
+        },
+        {
+            "files": "*.json",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80
+            }
+        },
+        {
+            "files": "*.md",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80,
+                "proseWrap": "always"
+            }
+        },
+        {
+            "files": "*.yml",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80
+            }
+        },
+        {
+            "files": "*.yaml",
+            "options": {
+                "tabWidth": 2,
+                "printWidth": 80
+            }
+        }
+    ]
+}

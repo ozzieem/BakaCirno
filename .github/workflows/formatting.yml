@@ -1,0 +1,73 @@
+name: Code Formatting
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    name: Check Code Formatting
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Prettier formatting
+        run: npm run format:check
+
+      - name: Check C# formatting
+        run: dotnet format BakaCirno/BakaCirno.csproj --verify-no-changes --verbosity diagnostic
+
+  auto-format:
+    runs-on: ubuntu-latest
+    name: Auto-format Code
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format with Prettier
+        run: npm run format
+
+      - name: Format C# code
+        run: dotnet format BakaCirno/BakaCirno.csproj
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🎨 Auto-format code with Prettier and dotnet format"
+          file_pattern: "*.cs *.json *.md *.yml *.yaml"
