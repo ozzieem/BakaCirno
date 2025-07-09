@@ -7,14 +7,14 @@
     },
     "prettier.requireConfig": true,
     "prettier.useEditorConfig": true,
-    
+
     // C# specific settings
     "[csharp]": {
         "editor.formatOnSave": true,
         "editor.tabSize": 4,
         "editor.insertSpaces": true
     },
-    
+
     // GDScript settings (for future Godot work)
     "[gdscript]": {
         "editor.defaultFormatter": "geequlim.godot-tools",
@@ -22,13 +22,13 @@
         "editor.insertSpaces": false,
         "editor.useTabStops": true
     },
-    
+
     // JSON settings
     "[json]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.tabSize": 2
     },
-    
+
     // Markdown settings
     "[markdown]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -36,14 +36,14 @@
         "editor.wordWrap": "on",
         "editor.rulers": [80]
     },
-    
+
     // General settings
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
     "editor.rulers": [100, 120],
     "editor.detectIndentation": false,
-    
+
     // File associations for future Godot work
     "files.associations": {
         "*.gd": "gdscript",
@@ -52,7 +52,7 @@
         "*.tres": "godot-resource",
         "project.godot": "godot-project"
     },
-    
+
     // Exclude build folders from explorer
     "files.exclude": {
         "**/bin": true,
@@ -61,5 +61,6 @@
         "**/node_modules": true,
         "**/.godot": true,
         "**/.import": true
-    }
+    },
+    "godotTools.editorPath.godot4": "e:\\Users\\Ozzie\\Downloads\\Godot_v4.4.1-stable_win64.exe\\Godot_v4.4.1-stable_win64.exe"
 }

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://ca4hqr2xb72o3"]
+
+[ext_resource type="Script" path="res://HighScoreText.gd" id="1_wyyts"]
+
+[node name="HighScoreText" type="Node2D"]
+script = ExtResource("1_wyyts")
