@@ -6,9 +6,9 @@ var texture: Texture2D
 var is_visible: bool = true
 var difference: Vector2
 
-# Movement speed - increased for quick collection
-var x_move_speed: float = 300.0 # Increased speed for faster collection
-var y_move_speed: float = x_move_speed * 1.5 # Y movement is slightly faster
+# Movement speed in pixels per second
+var x_move_speed: float = 600.0 # Horizontal speed (pixels/sec)
+var y_move_speed: float = x_move_speed * 2 # Vertical speed (pixels/sec)
 
 # Node references
 @onready var sprite: Sprite2D = $Sprite2D
@@ -67,9 +67,9 @@ func move_to_player(delta: float, player: Player):
 	difference = player.position - position
 	difference = difference.normalized()
 
-	# Move towards player
-	position.x += difference.x * delta * x_move_speed
-	position.y += difference.y * delta * y_move_speed
+	# Move towards player, scaled by delta time for frame independence
+	position.x += difference.x * x_move_speed * delta
+	position.y += difference.y * y_move_speed * delta
 
 func check_removal(player: Player):
 	# Check if point bullet reached player
