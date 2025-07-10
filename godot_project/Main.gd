@@ -163,8 +163,8 @@ func handle_input():
 	if Input.is_action_just_pressed("debug_exit"):
 		get_tree().quit()
 
-	# Start game if Enter is pressed (only from menu)
-	if Input.is_action_just_pressed("ui_accept") and current_state == GameState.MENU:
+	# Start game if Enter or Space is pressed (only from menu)
+	if (Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("shoot")) and current_state == GameState.MENU:
 		print("Starting new game")
 		if not sound_played:
 			sound_manager.play_button_select()
