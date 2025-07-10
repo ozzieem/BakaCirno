@@ -188,6 +188,7 @@ func update_ui_visibility():
 			game_background.visible = false
 			menu_background.visible = true
 			high_score_background.visible = false
+			player.visible = true # Show player in menu
 		GameState.PLAYING:
 			if menu_container:
 				menu_container.visible = false
@@ -198,6 +199,7 @@ func update_ui_visibility():
 			game_background.visible = true
 			menu_background.visible = false
 			high_score_background.visible = false
+			player.visible = true # Show player during gameplay
 		GameState.GAME_OVER:
 			if menu_container:
 				menu_container.visible = false
@@ -208,6 +210,7 @@ func update_ui_visibility():
 			game_background.visible = false
 			menu_background.visible = false
 			high_score_background.visible = true
+			player.visible = false # Hide player during game over screen
 
 func reset_game():
 	# Reset player

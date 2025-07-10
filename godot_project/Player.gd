@@ -28,8 +28,8 @@ var stop_movement: bool = true
 # Animation properties
 var current_frame: int = 0
 var animation_elapsed: float = 0.0
-var animation_delay: float = 0.12 # 120ms converted to seconds
-var death_animation_delay: float = 0.04 # 40ms converted to seconds
+var animation_delay: float = 0.2 # Slowed down from 120ms to 200ms for better visibility
+var death_animation_delay: float = 0.16 # Slowed down from 40ms to 80ms for death animation
 var death_timer: float = 0.0
 var death_duration: float = 1.5 # 1500ms converted to seconds
 
@@ -152,16 +152,23 @@ func handle_input():
 		return
 
 	var input_vector = Vector2.ZERO
+	var new_anim_texture = current_anim_texture
 
 	# Movement input
 	if Input.is_action_pressed("move_right"):
 		input_vector.x += 1
-		current_anim_texture = right_anim_texture
+		new_anim_texture = right_anim_texture
 	elif Input.is_action_pressed("move_left"):
 		input_vector.x -= 1
-		current_anim_texture = left_anim_texture
+		new_anim_texture = left_anim_texture
 	else:
-		current_anim_texture = idle_anim_texture
+		new_anim_texture = idle_anim_texture
+
+	# Reset animation frame when switching animations
+	if new_anim_texture != current_anim_texture:
+		current_frame = 0
+		animation_elapsed = 0.0
+		current_anim_texture = new_anim_texture
 
 	if Input.is_action_pressed("move_up"):
 		input_vector.y -= 1
@@ -263,8 +270,11 @@ func death_animation(delta):
 			sound_manager.play_player_death()
 		sound_played = true
 
-	# Switch to explosion animation
-	current_anim_texture = explosion_anim_texture
+	# Switch to explosion animation and reset animation if needed
+	if current_anim_texture != explosion_anim_texture:
+		current_anim_texture = explosion_anim_texture
+		current_frame = 0
+		animation_elapsed = 0.0
 
 	animation_elapsed += delta
 	if animation_elapsed >= death_animation_delay:
@@ -276,17 +286,25 @@ func death_animation(delta):
 		if current_frame >= frame_count:
 			current_frame = 0
 
+	# Update sprite with current frame (same as animate function)
+	if sprite and current_anim_texture:
+		sprite.texture = current_anim_texture
+		sprite.region_enabled = true
+		# Update sprite region based on current frame and animation
+		var frame_info = get_frame_info_for_texture(current_anim_texture)
+		sprite.region_rect = Rect2(frame_info.width * current_frame, 0, frame_info.width, frame_info.height)
+
 func get_frame_count_for_texture(texture: Texture2D) -> int:
-	# This would need to be adjusted based on your sprite sheet layout
+	# Frame counts based on the original C# implementation
 	var frame_count = 1
 	if texture == idle_anim_texture:
-		frame_count = 1 # Temporarily set to 1 to test single frame
+		frame_count = 5 # Idle animation has 5 frames
 	elif texture == right_anim_texture:
-		frame_count = 1 # Temporarily set to 1
+		frame_count = 5 # Right animation has 5 frames
 	elif texture == left_anim_texture:
-		frame_count = 1 # Temporarily set to 1
+		frame_count = 7 # Left animation has 7 frames
 	elif texture == explosion_anim_texture:
-		frame_count = 1 # Temporarily set to 1
+		frame_count = 10 # Explosion animation has 10 frames (from C# Explosion class)
 
 	return frame_count
 
