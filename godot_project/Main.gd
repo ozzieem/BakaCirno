@@ -10,6 +10,8 @@ enum GameState {
 # Game state management
 var current_state: GameState = GameState.MENU
 var sound_played: bool = false
+var game_reset_done: bool = false
+var death_transition_done: bool = false
 
 # Game objects and references
 var player: Player
@@ -107,12 +109,14 @@ func load_assets():
 	game_music = sound_manager.get_playing_song()
 
 func _process(delta):
-	# Check if player is dead
-	if player.is_dead:
+	# Check if player is dead (only transition once)
+	if player.is_dead and not death_transition_done:
 		# Clear all game objects when player dies and transition to GAME_OVER
-		if current_state != GameState.GAME_OVER:
-			clear_all_game_objects()
+		clear_all_game_objects()
 		current_state = GameState.GAME_OVER
+		game_reset_done = false # Allow reset when going back to menu
+		death_transition_done = true # Prevent repeated transitions
+		print("Player died - transitioning to GAME_OVER")
 
 	# Activate music based on game state
 	activate_game_music()
@@ -121,7 +125,9 @@ func _process(delta):
 	match current_state:
 		GameState.MENU:
 			player._process(delta)
-			reset_game()
+			if not game_reset_done:
+				reset_game()
+				game_reset_done = true
 		GameState.PLAYING:
 			update_playing_state(delta)
 		GameState.GAME_OVER:
@@ -141,45 +147,64 @@ func update_playing_state(delta):
 	text_overlay.update_time(delta)
 
 func handle_input():
-	# Return to menu if Escape is pressed
+	# Return to menu if Escape is pressed (from any state)
 	if Input.is_action_just_pressed("ui_cancel"):
-		current_state = GameState.MENU
-		reset_game()
-
-		# Exit game if Escape + F1 is pressed
-		if Input.is_action_pressed("debug_exit"):
+		if current_state == GameState.MENU:
+			# Exit game if already in menu
+			print("Exiting game from menu")
 			get_tree().quit()
+		else:
+			print("ESC pressed - returning to menu from ", current_state)
+			current_state = GameState.MENU
+			game_reset_done = false # Allow reset to happen when returning to menu
+			# DON'T reset death_transition_done here - keep it true to prevent immediate return to GAME_OVER
 
-	# Start game if Enter is pressed
+	# Exit game if F12 is pressed
+	if Input.is_action_just_pressed("debug_exit"):
+		get_tree().quit()
+
+	# Start game if Enter is pressed (only from menu)
 	if Input.is_action_just_pressed("ui_accept") and current_state == GameState.MENU:
+		print("Starting new game")
 		if not sound_played:
 			sound_manager.play_button_select()
 			sound_played = true
 
 		player.stop_movement = false
 		current_state = GameState.PLAYING
+		game_reset_done = false # Reset flag when starting game
+		death_transition_done = false # Reset death transition flag only when starting new game
 
 func update_ui_visibility():
 	# Update UI based on current state
 	match current_state:
 		GameState.MENU:
-			menu_container.visible = true
-			game_over_container.visible = false
-			high_score_text.visible = false
+			if menu_container:
+				menu_container.visible = true
+			if game_over_container:
+				game_over_container.visible = false
+			if high_score_text:
+				high_score_text.visible = false
 			game_background.visible = false
 			menu_background.visible = true
 			high_score_background.visible = false
 		GameState.PLAYING:
-			menu_container.visible = false
-			game_over_container.visible = false
-			high_score_text.visible = false
+			if menu_container:
+				menu_container.visible = false
+			if game_over_container:
+				game_over_container.visible = false
+			if high_score_text:
+				high_score_text.visible = false
 			game_background.visible = true
 			menu_background.visible = false
 			high_score_background.visible = false
 		GameState.GAME_OVER:
-			menu_container.visible = false
-			game_over_container.visible = true
-			high_score_text.visible = true
+			if menu_container:
+				menu_container.visible = false
+			if game_over_container:
+				game_over_container.visible = true
+			if high_score_text:
+				high_score_text.visible = true
 			game_background.visible = false
 			menu_background.visible = false
 			high_score_background.visible = true
@@ -332,6 +357,7 @@ func create_explosion(pos: Vector2):
 func clear_enemies():
 	for enemy in enemies:
 		if enemy and is_instance_valid(enemy):
+			enemy.clear_all_bullets() # Clear enemy bullets first
 			enemy.queue_free()
 	enemies.clear()
 
@@ -351,11 +377,8 @@ func clear_all_game_objects():
 	# Clear all game objects when transitioning to GAME_OVER state
 	print("Clearing all game objects for GAME_OVER state")
 
-	# Clear player bullets
-	for bullet in player.bullets:
-		if bullet and is_instance_valid(bullet):
-			bullet.queue_free()
-	player.bullets.clear()
+	# Clear player bullets using the player's method
+	player.clear_bullets()
 
 	# Clear enemies and their bullets
 	clear_enemies()

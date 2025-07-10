@@ -313,6 +313,8 @@ func reset_animation():
 	current_anim_texture = idle_anim_texture
 	current_frame = 0
 	animation_elapsed = 0.0
+	death_timer = 0.0
+	bullet_delay_timer = max_bullet_delay # Reset bullet delay timer
 
 func clear_bullets():
 	# Clear all player bullets (useful for game reset)

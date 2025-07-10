@@ -100,6 +100,21 @@ func set_texture(texture_path: String):
 func set_difficulty(deaths: float):
 	enemy_deaths = deaths
 
+func clear_all_bullets():
+	# Clear all circle shot patterns and their bullets
+	for circle_shot in circle_shots:
+		if circle_shot and is_instance_valid(circle_shot):
+			circle_shot.clear_bullets()
+			circle_shot.queue_free()
+	circle_shots.clear()
+
+	# Clear all random bullet patterns and their bullets
+	for random_shot in random_bullets:
+		if random_shot and is_instance_valid(random_shot):
+			random_shot.clear_bullets()
+			random_shot.queue_free()
+	random_bullets.clear()
+
 func update_movement(delta: float, player: Player):
 	if not is_visible:
 		return

@@ -89,3 +89,10 @@ func _process(delta):
 
 func get_bullets() -> Array[Bullet]:
 	return bullets
+
+func clear_bullets():
+	# Clear all bullets in this pattern
+	for bullet in bullets:
+		if bullet and is_instance_valid(bullet):
+			bullet.queue_free()
+	bullets.clear()
