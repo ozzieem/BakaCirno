@@ -54,34 +54,26 @@ func update_pattern(delta: float, player: Player, enemy: Enemy):
 	update_bullets(delta, player)
 
 func circle_pattern(delta: float, enemy: Enemy):
-	var circle_spawn = spawn_timer
-	var current_time_ms = Time.get_ticks_msec()
-	var curve_angle = int(current_time_ms / (CURVE_SIZE_PER_SECOND * 1000)) % DEGREES
+	# Only spawn bullets once when the pattern is first created
+	if bullets.size() > 0:
+		return
 
 	var rand_bullet_color = rng.randi_range(0, bullet_colors.size() - 1)
 	var bullet_texture = load(bullet_colors[rand_bullet_color])
 
-	for i in range(curve_angle, SPREAD + curve_angle, DEGREES):
-		if circle_spawn < 0:
-			continue
-
-		circle_spawn += 1
-
+	# Create a complete circle of bullets
+	for i in range(0, SPREAD, DEGREES):
 		# Calculate velocity in circular pattern
 		var angle_rad = deg_to_rad(i)
-		velocity.x = - cos(angle_rad)
+		velocity.x = cos(angle_rad)
 		velocity.y = sin(angle_rad)
-
-		if bullets.size() >= SPREAD / DEGREES:
-			continue
 
 		# Create new bullet
 		var bullet = preload("res://Bullet.tscn").instantiate()
 		get_parent().add_child(bullet)
 
 		# Position bullet at enemy center
-		var enemy_texture_width = enemy.texture.get_width() if enemy.texture else 64
-		var spawn_pos = Vector2(spawn_position.x + enemy_texture_width / 2, spawn_position.y)
+		var spawn_pos = spawn_position
 		var bullet_velocity = velocity * circle_speed
 
 		bullet.setup_bullet(bullet_texture, spawn_pos, bullet_velocity, circle_speed * 60)

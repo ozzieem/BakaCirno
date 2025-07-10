@@ -132,7 +132,7 @@ func follow_player(delta: float, player: Player):
 
 func update_enemy_position(delta: float):
 	# Update origin for bullet spawning
-	origin = Vector2(position.x - 32, position.y)
+	origin = Vector2(position.x, position.y)
 
 	# Remove enemy if it goes off screen
 	if position.y >= screen_size.y:
@@ -202,6 +202,7 @@ func update_shots(delta: float, player: Player):
 			if random_bullet:
 				random_bullet.queue_free()
 			random_bullets.remove_at(i)
+			random_bullets_spawned -= 1 # Decrement counter when removing pattern
 		else:
 			random_bullet.update_pattern(delta, player)
 
