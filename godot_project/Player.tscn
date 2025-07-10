@@ -3,13 +3,13 @@
 [ext_resource type="Script" path="res://Player.gd" id="1_rq4hw"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(50, 100)
+size = Vector2(20, 40)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_2"]
-size = Vector2(30, 30)
+size = Vector2(12, 12)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3"]
-size = Vector2(40, 40)
+size = Vector2(16, 16)
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_rq4hw")
