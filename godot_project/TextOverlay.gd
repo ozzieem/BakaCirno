@@ -5,11 +5,13 @@ class_name TextOverlay
 var score: float = 0.0
 var time: float = 0.0
 var enemies_killed: float = 0.0
+var difficulty_multiplier: float = 0.0
 
 # UI positions (matching C# MonoGame version)
 var score_position: Vector2 = Vector2(0, 100)
 var time_position: Vector2 = Vector2(0, 130)
 var enemies_killed_position: Vector2 = Vector2(0, 150)
+var difficulty_position: Vector2 = Vector2(0, 170)
 var control_info_position: Vector2 = Vector2(50, 900)
 var info_position: Vector2 = Vector2(150, 800)
 
@@ -57,10 +59,14 @@ func add_score(points: int):
 func add_enemies_killed(count: int):
 	enemies_killed += count
 
+func set_difficulty_multiplier(multiplier: float):
+	difficulty_multiplier = multiplier
+
 func reset_stats():
 	score = 0.0
 	time = 0.0
 	enemies_killed = 0.0
+	difficulty_multiplier = 0.0
 
 func _draw():
 	if not font:
@@ -92,6 +98,12 @@ func _draw():
 	var enemies_color = Color.ALICE_BLUE
 	draw_string_outline(font, enemies_killed_position, "Enemies Killed: " + str(int(enemies_killed)), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline_size, outline_color)
 	draw_string(font, enemies_killed_position, "Enemies Killed: " + str(int(enemies_killed)), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, enemies_color)
+
+	# Draw difficulty multiplier (Orange for visibility)
+	var difficulty_color = Color.ORANGE
+	var difficulty_display = 1.0 + difficulty_multiplier
+	draw_string_outline(font, difficulty_position, "Difficulty: x" + str(difficulty_display, 2), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline_size, outline_color)
+	draw_string(font, difficulty_position, "Difficulty: x" + str(difficulty_display, 2), HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, difficulty_color)
 
 	# Draw control instructions (matching C# timing: Time <= 4)
 	if time <= 4.0:

@@ -24,8 +24,9 @@ var explosions: Array[Explosion] = []
 var point_bullets: Array[PointBullet] = []
 
 # Game constants and variables
-const N_ENEMIES_SPAWN = 4
-var difficulty_increase: float = 0.0
+const N_ENEMIES_SPAWN = 5
+const enemy_difficulty_increase: float = 0.1
+var enemy_difficulty: float = 0.0
 
 # Audio
 var game_music: AudioStreamPlayer
@@ -148,6 +149,7 @@ func update_playing_state(delta):
 	update_point_bullets(delta)
 	update_explosions(delta)
 	text_overlay.update_time(delta)
+	text_overlay.set_difficulty_multiplier(enemy_difficulty)
 
 func handle_input():
 	# Return to menu if Escape is pressed (from any state)
@@ -233,7 +235,7 @@ func reset_game():
 	clear_explosions()
 
 	# Reset game variables
-	difficulty_increase = 0.0
+	enemy_difficulty = 0.0
 	text_overlay.reset_stats()
 	sound_played = false
 
@@ -322,7 +324,7 @@ func update_enemies(delta):
 
 		var enemy = preload("res://Enemy.tscn").instantiate()
 		enemy.position = Vector2(rand_x, rand_y)
-		enemy.set_difficulty(difficulty_increase)
+		enemy.set_difficulty(enemy_difficulty)
 		add_child(enemy)
 		enemies.append(enemy)
 
@@ -337,7 +339,7 @@ func update_enemies(delta):
 			sound_manager.play_enemy_death()
 
 			# Increase difficulty
-			difficulty_increase += 0.03
+			enemy_difficulty += enemy_difficulty_increase
 
 			# Update stats
 			text_overlay.add_enemies_killed(1)
