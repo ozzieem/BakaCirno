@@ -4,7 +4,7 @@ class_name Explosion
 # Animation properties
 var current_frame: int = 1
 var animation_elapsed: float = 0.0
-var animation_delay: float = 0.03 # 30ms converted to seconds
+var animation_delay: float = 0.1 # 100ms converted to seconds
 var frame_width: int = 134
 var max_frames: int = 10
 var is_visible: bool = true
@@ -21,8 +21,14 @@ func _ready():
 		sprite.region_enabled = true
 		sprite.region_rect = Rect2(frame_width * current_frame, 0, frame_width, texture.get_height())
 
+		# Ensure proper transparency handling
+		sprite.self_modulate = Color.WHITE # Ensure no color tinting
+		sprite.modulate = Color.WHITE # Ensure no transparency override
+
+		print("Explosion texture loaded: ", texture.get_size())
+
 	# Adjust position to align with enemy position
-	position = Vector2(position.x - 40, position.y - 35)
+	position = Vector2(position.x, position.y)
 
 func update_animation(delta: float):
 	if not is_visible:

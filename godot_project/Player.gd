@@ -68,6 +68,9 @@ func _ready():
 	# Setup collision
 	setup_collision()
 
+	# Hide collision shapes (disable debug drawing)
+	hide_collision_shapes()
+
 	# Create sound manager
 	sound_manager = Sound.new()
 	add_child(sound_manager)
@@ -91,20 +94,30 @@ func load_player_assets():
 		sprite.texture = current_anim_texture
 		sprite.region_enabled = true
 		sprite.centered = true
+
+		# Ensure proper transparency handling
+		sprite.self_modulate = Color.WHITE # Ensure no color tinting
+		sprite.modulate = Color.WHITE # Ensure no transparency override
+
 		# Start with first frame of idle animation
 		var frame_info = get_frame_info_for_texture(current_anim_texture)
 		sprite.region_rect = Rect2(0, 0, frame_info.width, frame_info.height)
 
 func load_texture_with_fallback(path: String, fallback_color: Color) -> Texture2D:
 	if ResourceLoader.exists(path):
-		return load(path)
+		var loaded_texture = load(path)
+		print("Successfully loaded texture: ", path)
+		return loaded_texture
 	else:
-		# Create a simple colored fallback texture
-		var image = Image.create(68, 128, false, Image.FORMAT_RGB8)
-		image.fill(fallback_color)
+		# Create a transparent fallback texture with RGBA format
+		print("WARNING: Texture not found, creating fallback for: ", path)
+		var image = Image.create(68, 128, false, Image.FORMAT_RGBA8)
+		# Fill with transparent color (alpha = 0.8 to make fallback visible but not solid)
+		var transparent_color = Color(fallback_color.r, fallback_color.g, fallback_color.b, 0.8)
+		image.fill(transparent_color)
 		var fallback_texture = ImageTexture.new()
 		fallback_texture.set_image(image)
-		print("Created fallback texture for: " + path)
+		print("Created RGBA fallback texture for: " + path)
 		return fallback_texture
 
 func setup_collision():
@@ -127,6 +140,23 @@ func setup_collision():
 		point_collision_area.area_entered.connect(_on_point_collision)
 	else:
 		print("WARNING: point_collision_area not found!")
+
+func hide_collision_shapes():
+	# Disable debug drawing for collision shapes to prevent black boxes
+	if collision_shape:
+		collision_shape.debug_color = Color.TRANSPARENT
+
+	# Hide collision shapes for bullet collision area
+	if bullet_collision_area:
+		var bullet_collision_shape = bullet_collision_area.get_node("CollisionShape2D")
+		if bullet_collision_shape:
+			bullet_collision_shape.debug_color = Color.TRANSPARENT
+
+	# Hide collision shapes for point collision area
+	if point_collision_area:
+		var point_collision_shape = point_collision_area.get_node("CollisionShape2D")
+		if point_collision_shape:
+			point_collision_shape.debug_color = Color.TRANSPARENT
 
 func _process(delta):
 	if not stop_movement:
@@ -298,13 +328,13 @@ func get_frame_count_for_texture(texture: Texture2D) -> int:
 	# Frame counts based on the original C# implementation
 	var frame_count = 1
 	if texture == idle_anim_texture:
-		frame_count = 5 # Idle animation has 5 frames
+		frame_count = 6 # Idle animation has 6 frames
 	elif texture == right_anim_texture:
-		frame_count = 5 # Right animation has 5 frames
+		frame_count = 8 # Right animation has 8 frames
 	elif texture == left_anim_texture:
-		frame_count = 7 # Left animation has 7 frames
+		frame_count = 8 # Left animation has 8 frames
 	elif texture == explosion_anim_texture:
-		frame_count = 10 # Explosion animation has 10 frames (from C# Explosion class)
+		frame_count = 12 # Explosion animation has 12 frames
 
 	return frame_count
 

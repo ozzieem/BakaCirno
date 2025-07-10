@@ -47,6 +47,9 @@ func _ready():
 	# Initialize the random number generator
 	rng.randomize()
 
+	# Disable debug collision shape drawing globally
+	get_tree().debug_collisions_hint = false
+
 	# The window size is set in project settings, but we can ensure it here
 	get_window().size = Vector2i(920, 950)
 
