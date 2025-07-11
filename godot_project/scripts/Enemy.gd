@@ -15,10 +15,14 @@ var shot_delay: float = 0.0
 var max_shot_delay: float = 1.67 # 100 frames at 60fps converted to seconds
 var n_circle_spawns: int = 0
 var max_circle_spawns: int = 10
-var max_random_bullets: int = 10
-var random_bullets_spawned: int = 0
 
-# Bullet patterns
+# Bullet patterns - using new pattern system
+var pattern_manager: PatternManager
+var assigned_pattern: String = "" # Pattern assigned to this enemy for its entire lifetime
+var assigned_bullet_color: String = "" # Bullet color assigned to this enemy for its entire lifetime
+var attack_count: int = 0 # Number of attacks this enemy has performed
+
+# Legacy pattern arrays (for backward compatibility)
 var random_bullets: Array[RandomShots] = []
 var circle_shots: Array[CircleShots] = []
 
@@ -29,6 +33,11 @@ var enemy_deaths: float = 0.0
 # Node references
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var debug_label: Label = $DebugLabel
+
+# Debug and display
+var current_pattern_type: String = "None"
+var show_debug_info: bool = false
 
 # Sound manager
 var sound_manager: Sound
@@ -57,10 +66,77 @@ func _ready():
 	# Initialize shooting properties
 	shot_delay = max_shot_delay
 	n_circle_spawns = rng.randi_range(2, max_circle_spawns)
-	random_bullets_spawned = 0
+
+	# Initialize pattern manager
+	setup_pattern_manager()
+
+	# Assign a pattern for this enemy's entire lifetime
+	assign_pattern()
+
+	# Assign a bullet color for this enemy's entire lifetime
+	assign_bullet_color()
+
+	# Initialize debug display
+	update_debug_display()
 
 func set_sound_manager(sound_mgr: Sound):
 	sound_manager = sound_mgr
+
+	# Also set for pattern manager
+	if pattern_manager:
+		pattern_manager.set_sound_manager(sound_mgr)
+
+func setup_pattern_manager():
+	"""Initialize the pattern manager"""
+	pattern_manager = PatternManager.new()
+	add_child(pattern_manager)
+
+	pattern_manager.set_enemy_owner(self)
+	pattern_manager.set_sound_manager(sound_manager)
+
+	# Configure pattern manager settings
+	pattern_manager.auto_spawn_enabled = true
+	pattern_manager.min_pattern_interval = 1.0
+	pattern_manager.max_pattern_interval = 3.0
+
+	# Connect pattern manager signals
+	pattern_manager.pattern_started.connect(_on_pattern_started)
+	pattern_manager.pattern_completed.connect(_on_pattern_completed)
+
+func assign_pattern():
+	"""Assign a single pattern to this enemy for its entire lifetime"""
+	if assigned_pattern != "":
+		return # Already assigned
+
+	# Get all available patterns (excluding random)
+	var all_patterns = ["circle", "spiral", "wave", "star", "burst"]
+	var available_patterns = []
+
+	for pattern_name in all_patterns:
+		if pattern_manager.is_pattern_available(pattern_name):
+			available_patterns.append(pattern_name)
+
+	# Select a random pattern from available ones
+	if not available_patterns.is_empty():
+		assigned_pattern = available_patterns[rng.randi() % available_patterns.size()]
+		set_current_pattern_type(assigned_pattern.capitalize())
+	else:
+		assigned_pattern = "circle" # Fallback to circle if no patterns available
+
+func assign_bullet_color():
+	"""Assign a single bullet color to this enemy for its entire lifetime"""
+	if assigned_bullet_color != "":
+		return # Already assigned
+
+	# Get available bullet colors from pattern parameters
+	var pattern_params = PatternParameters.new()
+	var bullet_colors = pattern_params.bullet_colors
+	var color_keys = bullet_colors.keys()
+
+	if color_keys.size() > 0:
+		assigned_bullet_color = color_keys[rng.randi() % color_keys.size()]
+	else:
+		assigned_bullet_color = "red" # Fallback
 
 func set_texture(texture_path: String):
 	# Determine enemy color from texture path
@@ -144,20 +220,10 @@ func set_texture(texture_path: String):
 func set_difficulty(deaths: float):
 	enemy_deaths = deaths
 
-func clear_all_bullets():
-	# Clear all circle shot patterns and their bullets
-	for circle_shot in circle_shots:
-		if circle_shot and is_instance_valid(circle_shot):
-			circle_shot.clear_bullets()
-			circle_shot.queue_free()
-	circle_shots.clear()
-
-	# Clear all random bullet patterns and their bullets
-	for random_shot in random_bullets:
-		if random_shot and is_instance_valid(random_shot):
-			random_shot.clear_bullets()
-			random_shot.queue_free()
-	random_bullets.clear()
+	# Update pattern manager difficulty
+	if pattern_manager and pattern_manager.difficulty_scaler:
+		pattern_manager.difficulty_scaler.enemy_kills = int(deaths)
+		pattern_manager.difficulty_scaler.current_difficulty = 1.0 + deaths * 0.1
 
 func update_movement(delta: float, player: Player):
 	if not is_visible:
@@ -166,6 +232,9 @@ func update_movement(delta: float, player: Player):
 	follow_player(delta, player)
 	update_enemy_position(delta)
 	check_collision(player)
+
+	# Update debug display
+	update_debug_display()
 
 func follow_player(delta: float, player: Player):
 	# Gradually follow player's x position
@@ -210,34 +279,48 @@ func update_shooting(delta: float, player: Player):
 	update_shots(delta, player)
 
 func enemy_shot():
-	# Fire circle shots
-	if n_circle_spawns > 0:
-		var circle_shot = CircleShots.new()
-		circle_shot.setup(origin, speed_increase)
-		get_parent().add_child(circle_shot)
-		circle_shots.append(circle_shot)
+	"""Fire shots using assigned pattern system"""
+	if not pattern_manager or assigned_pattern == "":
+		return
 
-		# Pass sound manager to circle shot
-		if sound_manager:
-			circle_shot.set_sound_manager(sound_manager)
+	# Increment attack count for spiral expansion
+	attack_count += 1
 
-		# Play sound
-		if sound_manager:
-			sound_manager.play_enemy_circle_shoot()
+	# Get player position for targeting
+	var player_pos = Vector2.ZERO
+	if get_parent().has_method("get_player_position"):
+		player_pos = get_parent().get_player_position()
 
-		n_circle_spawns -= 1
+	# Use the assigned pattern for this enemy
+	var selected_pattern = ""
+	if pattern_manager.is_pattern_available(assigned_pattern):
+		var params = pattern_manager.get_default_params_for_pattern(assigned_pattern)
+		params.apply_difficulty_scaling(1.0 + enemy_deaths * 0.1)
 
-	# Fire random bullets
-	if random_bullets_spawned < max_random_bullets:
-		var random_shot = RandomShots.new()
-		random_shot.setup(origin)
-		get_parent().add_child(random_shot)
-		random_bullets.append(random_shot)
+		# For spiral patterns, pass attack count for expansion
+		if assigned_pattern == "spiral":
+			params.set_custom_param("attack_count", attack_count)
+			params.set_custom_param("enemy_position", origin)
 
-		random_bullets_spawned += 1
+		# Handle circle pattern limit
+		if assigned_pattern == "circle":
+			if n_circle_spawns > 0:
+				pattern_manager.spawn_pattern(assigned_pattern, origin, player_pos, params, assigned_bullet_color)
+				n_circle_spawns -= 1
+				selected_pattern = assigned_pattern.capitalize()
+		else:
+			# Other patterns don't have limits
+			pattern_manager.spawn_pattern(assigned_pattern, origin, player_pos, params, assigned_bullet_color)
+			selected_pattern = assigned_pattern.capitalize()
+
+	# Update debug display with current pattern
+	if selected_pattern != "":
+		set_current_pattern_type(selected_pattern)
+	else:
+		set_current_pattern_type("None")
 
 func update_shots(delta: float, player: Player):
-	# Update circle shots
+	# Update circle shots (legacy support)
 	for i in range(circle_shots.size() - 1, -1, -1):
 		var circle_shot = circle_shots[i]
 		if not circle_shot or not circle_shot.is_visible:
@@ -246,17 +329,6 @@ func update_shots(delta: float, player: Player):
 			circle_shots.remove_at(i)
 		else:
 			circle_shot.update_pattern(delta, player, self)
-
-	# Update random bullets
-	for i in range(random_bullets.size() - 1, -1, -1):
-		var random_bullet = random_bullets[i]
-		if not random_bullet or not random_bullet.is_visible:
-			if random_bullet:
-				random_bullet.queue_free()
-			random_bullets.remove_at(i)
-			random_bullets_spawned -= 1 # Decrement counter when removing pattern
-		else:
-			random_bullet.update_pattern(delta, player)
 
 func check_collision(player: Player):
 	# Remove enemy if it goes off screen
@@ -299,3 +371,77 @@ func _process(delta):
 	# Auto-destroy when not visible
 	if not is_visible:
 		queue_free()
+
+# Pattern Manager Signal Handlers
+func _on_pattern_started(pattern: BulletPattern):
+	"""Called when a pattern starts"""
+	if sound_manager:
+		sound_manager.play_enemy_circle_shoot()
+
+func _on_pattern_completed(pattern: BulletPattern):
+	"""Called when a pattern completes"""
+	pass
+
+# Utility methods for pattern system
+func get_player_position() -> Vector2:
+	"""Get current player position for targeting"""
+	var parent = get_parent()
+	if parent and parent.has_method("get_player_position"):
+		return parent.get_player_position()
+	return Vector2.ZERO
+
+func update_debug_display():
+	"""Update debug information display"""
+	if debug_label:
+		if show_debug_info:
+			debug_label.text = "Pattern: " + current_pattern_type
+			debug_label.visible = true
+		else:
+			debug_label.visible = false
+
+func set_current_pattern_type(pattern_type: String):
+	"""Set the current pattern type for debug display"""
+	current_pattern_type = pattern_type
+	update_debug_display()
+
+func set_debug_info(show: bool):
+	"""Toggle debug information display"""
+	show_debug_info = show
+	update_debug_display()
+
+func clear_all_bullets():
+	"""Clear all bullets using new pattern system - improved version"""
+	# First, convert bullets to points if enemy is dying
+	if not is_visible:
+		convert_bullets_to_points_on_death()
+
+	# Stop auto-spawning immediately
+	if pattern_manager:
+		pattern_manager.auto_spawn_enabled = false
+		pattern_manager.clear_all_patterns()
+
+	# Also clear legacy patterns for backward compatibility
+	for circle_shot in circle_shots:
+		if circle_shot and is_instance_valid(circle_shot):
+			circle_shot.clear_bullets()
+			circle_shot.queue_free()
+	circle_shots.clear()
+
+	# Update debug display
+	set_current_pattern_type("Cleared")
+
+func convert_bullets_to_points_on_death():
+	"""Convert bullets to points when enemy dies - called internally"""
+	if pattern_manager:
+		var bullets_to_convert = pattern_manager.get_all_active_bullets()
+		for bullet in bullets_to_convert:
+			if bullet and is_instance_valid(bullet) and bullet.is_visible:
+				# Call main game's conversion method
+				var main_scene = get_parent()
+				if main_scene and main_scene.has_method("create_point_bullet_from_bullet"):
+					main_scene.create_point_bullet_from_bullet(bullet)
+					bullet.is_visible = false
+
+func get_enemy_bullet_color() -> String:
+	"""Get the bullet color assigned to this enemy"""
+	return assigned_bullet_color

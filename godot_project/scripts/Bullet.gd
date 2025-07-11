@@ -14,6 +14,9 @@ var is_visible: bool = true
 # Screen bounds
 var screen_size: Vector2
 
+# Custom behavior system
+var custom_behaviors: Dictionary = {}
+
 func _ready():
 	# Connect collision signal
 	area_entered.connect(_on_area_entered)
@@ -91,3 +94,16 @@ func set_bullet_type(is_player_bullet: bool):
 	else:
 		collision_layer = 2 # Enemy bullet layer
 		collision_mask = 1 # Can hit player only (layer 1)
+
+# Custom behavior system
+func set_custom_behavior(behavior_name: String, value):
+	"""Set a custom behavior parameter"""
+	custom_behaviors[behavior_name] = value
+
+func get_custom_behavior(behavior_name: String, default_value = null):
+	"""Get a custom behavior parameter"""
+	return custom_behaviors.get(behavior_name, default_value)
+
+func has_custom_behavior(behavior_name: String) -> bool:
+	"""Check if bullet has a custom behavior"""
+	return behavior_name in custom_behaviors

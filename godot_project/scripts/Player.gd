@@ -27,6 +27,7 @@ var power_shot: bool = false
 var sound_played: bool = false
 var stop_movement: bool = true
 var can_shoot: bool = false # New flag to control shooting permission
+var is_invincible: bool = false # Debug invincibility mode
 
 # Power shot toggle cooldown
 var power_shot_toggle_cooldown: float = 0.0
@@ -401,11 +402,28 @@ func clear_bullets():
 	bullets.clear()
 
 func take_damage():
+	if is_invincible:
+		print("Player is invincible (debug mode) - no damage taken")
+		return
+
 	if not is_colliding:
 		print("Player taking damage! Setting is_colliding = true")
 		is_colliding = true
 		sound_played = false
 		death_timer = 0.0
+
+func set_invincible(invincible: bool):
+	"""Set player invincibility state for debug mode"""
+	is_invincible = invincible
+
+	# Visual indicator for invincibility
+	if sprite:
+		if invincible:
+			sprite.modulate = Color(1.0, 1.0, 1.0, 0.7) # Semi-transparent
+			print("Player invincibility enabled - visual indicator active")
+		else:
+			sprite.modulate = Color(1.0, 1.0, 1.0, 1.0) # Fully opaque
+			print("Player invincibility disabled - visual indicator cleared")
 
 func _on_bullet_collision(area):
 	# Handle collision with enemy bullets only

@@ -24,7 +24,7 @@ var explosions: Array[Explosion] = []
 var point_bullets: Array[PointBullet] = []
 
 # Game constants and variables
-const N_ENEMIES_SPAWN = 5
+const N_ENEMIES_SPAWN = 1
 const enemy_difficulty_increase: float = 0.1
 var enemy_difficulty: float = 0.0
 
@@ -44,6 +44,10 @@ var high_score_background: Background
 
 # Random number generator
 var rng = RandomNumberGenerator.new()
+
+# Debug state
+var debug_mode_active: bool = false
+var player_invincible: bool = false
 
 func _ready():
 	# Initialize the random number generator
@@ -167,6 +171,9 @@ func update_playing_state(delta):
 	text_overlay.set_difficulty_multiplier(enemy_difficulty)
 
 func handle_input():
+	# Handle debug input first
+	handle_debug_input()
+
 	# Return to menu if Escape is pressed (from any state)
 	if Input.is_action_just_pressed("ui_cancel"):
 		if current_state == GameState.MENU:
@@ -179,10 +186,6 @@ func handle_input():
 			current_state = GameState.MENU
 			game_reset_done = false # Allow reset to happen when returning to menu
 			# DON'T reset death_transition_done here - keep it true to prevent immediate return to GAME_OVER
-
-	# Exit game if F12 is pressed
-	if Input.is_action_just_pressed("debug_exit"):
-		get_tree().quit()
 
 	# Start game if Enter or Space is pressed (only from menu)
 	if Input.is_action_just_pressed("ui_accept") and current_state == GameState.MENU:
@@ -249,6 +252,10 @@ func reset_game():
 	player.sound_played = false
 	player.stop_movement = true
 	player.reset_animation()
+
+	# Maintain debug invincibility state during reset
+	if debug_mode_active:
+		player.set_invincible(true)
 
 	# Clear player bullets
 	player.clear_bullets()
@@ -371,6 +378,10 @@ func update_enemies(delta):
 		# Set texture after adding to scene tree to ensure nodes are ready
 		enemy.set_texture(enemy_textures[enemy_type])
 
+		# Set debug info state if debug mode is active
+		if debug_mode_active:
+			enemy.set_debug_info(true)
+
 	# Remove dead enemies and create explosions
 	for i in range(enemies.size() - 1, -1, -1):
 		var enemy = enemies[i]
@@ -385,14 +396,19 @@ func update_enemies(delta):
 			text_overlay.add_enemies_killed(1)
 			text_overlay.add_score(500)
 
-			# Convert enemy bullets to point bullets
+			# IMPORTANT: First stop enemy from spawning new bullets
+			if enemy.pattern_manager:
+				enemy.pattern_manager.auto_spawn_enabled = false
+
+			# Convert enemy bullets to point bullets BEFORE clearing
 			convert_enemy_bullets_to_points(enemy)
 
 			# Spawn points and explosion
 			spawn_points()
 			create_explosion(enemy.position)
 
-			# Remove enemy
+			# Clear remaining bullets and remove enemy
+			enemy.clear_all_bullets()
 			enemy.queue_free()
 			enemies.remove_at(i)
 
@@ -452,6 +468,15 @@ func convert_enemy_bullets_to_points(enemy: Enemy):
 	# Convert all bullets from this enemy's shot patterns to point bullets
 	var total_bullets_converted = 0
 
+	# Convert bullets from new pattern manager system
+	if enemy.pattern_manager:
+		var bullet_creator = func(bullet: Bullet):
+			create_point_bullet_from_bullet(bullet)
+			text_overlay.add_score(5) # Bonus points like in original
+
+		total_bullets_converted += enemy.pattern_manager.convert_all_bullets_to_points(bullet_creator)
+
+	# Convert legacy pattern bullets (for backward compatibility)
 	# Convert circle shot bullets
 	for circle_shot in enemy.circle_shots:
 		if circle_shot and is_instance_valid(circle_shot):
@@ -501,3 +526,31 @@ func create_point_bullet_from_bullet(bullet):
 
 	# Then setup texture after nodes are ready
 	point_bullet.setup_point_bullet(point_texture, bullet.position)
+
+func toggle_enemy_debug_info():
+	"""Toggle debug information display for all enemies"""
+	debug_mode_active = not debug_mode_active
+	player_invincible = debug_mode_active
+
+	for enemy in enemies:
+		if enemy and is_instance_valid(enemy):
+			enemy.set_debug_info(debug_mode_active)
+
+	# Update player invincibility based on debug mode
+	if player:
+		player.set_invincible(player_invincible)
+
+	var status = "enabled" if debug_mode_active else "disabled"
+	print("Debug mode ", status, " - Player invincibility ", status)
+
+func handle_debug_input():
+	"""Handle debug input commands"""
+	# Toggle enemy debug info with I key
+	if Input.is_action_just_pressed("debug_enemy_info"):
+		toggle_enemy_debug_info()
+		var mode_text = "ON" if debug_mode_active else "OFF"
+		print("Debug mode: ", mode_text, " | Enemy info: ", mode_text, " | Player invincibility: ", mode_text)
+
+	# Exit game with F12
+	if Input.is_action_just_pressed("debug_exit"):
+		get_tree().quit()
