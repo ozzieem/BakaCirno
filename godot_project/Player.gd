@@ -14,9 +14,11 @@ var power_shot_texture: Texture2D
 var current_bullet_texture: Texture2D
 
 # Player properties
-var movement_speed: float = 360.0 # pixels per second
+var movement_speed: float = 300.0 # pixels per second - base movement speed
+var precision_movement_speed: float = 120.0 # pixels per second - precision movement speed
 var bullet_speed: int = 240 # pixels per second
-var max_bullet_delay: float = 0.25 # seconds between shots
+var max_bullet_delay: float = 0.3 # seconds between shots (slower auto-fire)
+var auto_fire: bool = true # Enable automatic firing
 
 # Player states
 var is_colliding: bool = false
@@ -24,6 +26,11 @@ var is_dead: bool = false
 var power_shot: bool = false
 var sound_played: bool = false
 var stop_movement: bool = true
+var can_shoot: bool = false # New flag to control shooting permission
+
+# Power shot toggle cooldown
+var power_shot_toggle_cooldown: float = 0.0
+var power_shot_cooldown_time: float = 0.2 # 200ms cooldown to prevent rapid toggling
 
 # Animation properties
 var current_frame: int = 0
@@ -159,7 +166,11 @@ func hide_collision_shapes():
 
 func _process(delta):
 	if not stop_movement:
-		handle_input()
+		handle_input(delta)
+
+	# Auto-fire bullets continuously - only when allowed to shoot
+	if auto_fire and not is_colliding and can_shoot:
+		shoot()
 
 	update_bullets(delta)
 	boundary_check()
@@ -176,14 +187,22 @@ func _process(delta):
 	if bullet_delay_timer > 0:
 		bullet_delay_timer -= delta
 
-func handle_input():
+	# Update power shot toggle cooldown
+	if power_shot_toggle_cooldown > 0:
+		power_shot_toggle_cooldown -= delta
+
+func handle_input(delta):
 	if is_colliding:
 		return
+
+	# Check for precision movement mode (holding shift slows down movement)
+	var precision_mode = Input.is_action_pressed("precision_move")
+	var current_speed = precision_movement_speed if precision_mode else movement_speed
 
 	var input_vector = Vector2.ZERO
 	var new_anim_texture = current_anim_texture
 
-	# Movement input
+	# Movement input - build movement vector for smooth diagonal movement
 	if Input.is_action_pressed("move_right"):
 		input_vector.x += 1
 		new_anim_texture = right_anim_texture
@@ -193,31 +212,33 @@ func handle_input():
 	else:
 		new_anim_texture = idle_anim_texture
 
+	if Input.is_action_pressed("move_up"):
+		input_vector.y -= 1
+	if Input.is_action_pressed("move_down"):
+		input_vector.y += 1
+
 	# Reset animation frame when switching animations
 	if new_anim_texture != current_anim_texture:
 		current_frame = 0
 		animation_elapsed = 0.0
 		current_anim_texture = new_anim_texture
 
-	if Input.is_action_pressed("move_up"):
-		input_vector.y -= 1
-	if Input.is_action_pressed("move_down"):
-		input_vector.y += 1
-
-	# Apply movement
+	# Apply movement with proper normalization for diagonal movement
 	if input_vector != Vector2.ZERO:
-		velocity = input_vector.normalized() * movement_speed
+		# Normalize diagonal movement so it's not faster than cardinal movement
+		input_vector = input_vector.normalized()
+		velocity = input_vector * current_speed
 	else:
 		velocity = Vector2.ZERO
 
+	# Apply the movement
 	move_and_slide()
 
-	# Shooting input
-	if Input.is_action_pressed("shoot"):
-		shoot()
-
-	# Power shot
-	power_shot = Input.is_action_pressed("power_shot")
+	# Power shot toggle - Space key toggles between normal and power shots (only during gameplay)
+	if Input.is_action_just_pressed("power_shot_toggle") and can_shoot and power_shot_toggle_cooldown <= 0:
+		power_shot = not power_shot
+		power_shot_toggle_cooldown = power_shot_cooldown_time # Set cooldown
+		print("Power shot mode: ", "ON" if power_shot else "OFF")
 
 func shoot():
 	# Choose bullet texture based on power shot
@@ -362,6 +383,15 @@ func reset_animation():
 	animation_elapsed = 0.0
 	death_timer = 0.0
 	bullet_delay_timer = max_bullet_delay # Reset bullet delay timer
+	can_shoot = false # Reset shooting permission
+
+func set_can_shoot(value: bool):
+	can_shoot = value
+	if not can_shoot:
+		print("Player shooting disabled")
+		power_shot = false # Reset power shot when shooting is disabled
+	else:
+		print("Player shooting enabled")
 
 func clear_bullets():
 	# Clear all player bullets (useful for game reset)

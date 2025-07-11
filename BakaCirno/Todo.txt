@@ -5,7 +5,6 @@
 - Rework TextOverlay class so text can be changed and placed individually (?)
 - Add a real highscore which saves scores and names to a file
 - Add Lifepoints text next to enemies?
-- (Change position of score, Time and Enemies killed text?)
 
 DONE:
 D: Highscore	(Temporary highscore for now)

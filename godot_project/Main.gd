@@ -128,6 +128,8 @@ func load_assets():
 func _process(delta):
 	# Check if player is dead (only transition once)
 	if player.is_dead and not death_transition_done:
+		# Disable shooting when player dies
+		player.set_can_shoot(false)
 		# Clear all game objects when player dies and transition to GAME_OVER
 		clear_all_game_objects()
 		current_state = GameState.GAME_OVER
@@ -173,6 +175,7 @@ func handle_input():
 			get_tree().quit()
 		else:
 			print("ESC pressed - returning to menu from ", current_state)
+			player.set_can_shoot(false) # Disable shooting when returning to menu
 			current_state = GameState.MENU
 			game_reset_done = false # Allow reset to happen when returning to menu
 			# DON'T reset death_transition_done here - keep it true to prevent immediate return to GAME_OVER
@@ -181,31 +184,15 @@ func handle_input():
 	if Input.is_action_just_pressed("debug_exit"):
 		get_tree().quit()
 
-	# TESTING: Fix music settings and test with Delete key
-	if Input.is_action_just_pressed("ui_text_delete"): # Delete key
-		print("🔧 FIXING MUSIC SETTINGS AND TESTING")
-		if sound_manager:
-			sound_manager.fix_and_test_music()
-		else:
-			print("❌ Cannot fix - sound_manager is null")
-
-	# TESTING: WAV file analysis with Insert key
-	if Input.is_action_just_pressed("ui_text_completion_replace"): # Insert key
-		print("🔍 ANALYZING MUSIC FILE")
-		if sound_manager:
-			sound_manager.analyze_music_file()
-		else:
-			print("❌ Cannot analyze - sound_manager is null")
-
-
 	# Start game if Enter or Space is pressed (only from menu)
-	if (Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("shoot")) and current_state == GameState.MENU:
+	if Input.is_action_just_pressed("ui_accept") and current_state == GameState.MENU:
 		print("Starting new game")
 		if not sound_played:
 			sound_manager.play_button_select()
 			sound_played = true
 
 		player.stop_movement = false
+		player.set_can_shoot(true) # Enable shooting when game starts
 		current_state = GameState.PLAYING
 		game_reset_done = false # Reset flag when starting game
 		death_transition_done = false # Reset death transition flag only when starting new game
