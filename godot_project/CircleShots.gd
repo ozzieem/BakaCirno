@@ -18,11 +18,11 @@ const CURVE_SIZE_PER_SECOND = 0.1
 
 # Bullet color textures
 var bullet_colors = [
-	"res://assets/textures/Blueshot1.png",
-	"res://assets/textures/Redshot1.png",
-	"res://assets/textures/Yellowshot1.png",
-	"res://assets/textures/Greenshot1.png",
-	"res://assets/textures/Purpleshot.png"
+	"res://assets/textures/bullets/bullet_Blueshot1.png",
+	"res://assets/textures/bullets/bullet_Redshot1.png",
+	"res://assets/textures/bullets/bullet_Yellowshot1.png",
+	"res://assets/textures/bullets/bullet_Greenshot1.png",
+	"res://assets/textures/bullets/bullet_Purpleshot.png"
 ]
 
 # Sound manager

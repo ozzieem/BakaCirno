@@ -41,15 +41,15 @@ func load_sounds():
 		return
 
 	# Load audio files
-	playing_song = load("res://assets/sounds/CirnoThemeSong.ogg")
-	button_play_select = load("res://assets/sounds/ButtonPlaySelectSFX.wav")
+	playing_song = load("res://assets/sounds/music/music_CirnoThemeSong.ogg")
+	button_play_select = load("res://assets/sounds/sfx/sfx_ButtonPlaySelectSFX.wav")
 
-	player_shoot = load("res://assets/sounds/PlayershotSFX.wav")
-	player_death = load("res://assets/sounds/DeathSFX.wav")
+	player_shoot = load("res://assets/sounds/sfx/sfx_PlayershotSFX.wav")
+	player_death = load("res://assets/sounds/sfx/sfx_DeathSFX.wav")
 
-	enemy_circle_shoot = load("res://assets/sounds/EnemyShootSFX1.wav")
-	enemy_random_shoot = load("res://assets/sounds/EnemyShootSFX2.wav")
-	enemy_death = load("res://assets/sounds/enemyDeathSFX.wav")
+	enemy_circle_shoot = load("res://assets/sounds/sfx/sfx_EnemyShootSFX1.wav")
+	enemy_random_shoot = load("res://assets/sounds/sfx/sfx_EnemyShootSFX2.wav")
+	enemy_death = load("res://assets/sounds/sfx/sfx_enemyDeathSFX.wav")
 
 	# Debug: Check if main music loaded
 	if playing_song:

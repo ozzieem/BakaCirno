@@ -85,14 +85,14 @@ func set_sound_manager(sound_mgr: Sound):
 
 func load_player_assets():
 	# Load animation textures with fallbacks
-	idle_anim_texture = load_texture_with_fallback("res://assets/textures/idlecirno.png", Color.CYAN)
-	right_anim_texture = load_texture_with_fallback("res://assets/textures/rightcirno.png", Color.LIGHT_BLUE)
-	left_anim_texture = load_texture_with_fallback("res://assets/textures/leftcirno.png", Color.LIGHT_BLUE)
-	explosion_anim_texture = load_texture_with_fallback("res://assets/textures/blueexplosion.png", Color.RED)
+	idle_anim_texture = load_texture_with_fallback("res://assets/textures/player/player_idlecirno.png", Color.CYAN)
+	right_anim_texture = load_texture_with_fallback("res://assets/textures/player/player_rightcirno.png", Color.LIGHT_BLUE)
+	left_anim_texture = load_texture_with_fallback("res://assets/textures/player/player_leftcirno.png", Color.LIGHT_BLUE)
+	explosion_anim_texture = load_texture_with_fallback("res://assets/textures/player/player_blueexplosion.png", Color.RED)
 
 	# Load bullet textures
-	bullet_texture = load_texture_with_fallback("res://assets/textures/playershot1mini.png", Color.YELLOW)
-	power_shot_texture = load_texture_with_fallback("res://assets/textures/playershot1.png", Color.ORANGE)
+	bullet_texture = load_texture_with_fallback("res://assets/textures/bullets/bullet_playershot1mini.png", Color.YELLOW)
+	power_shot_texture = load_texture_with_fallback("res://assets/textures/bullets/bullet_playershot1.png", Color.ORANGE)
 
 	# Set initial animation
 	current_anim_texture = idle_anim_texture

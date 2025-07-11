@@ -20,10 +20,10 @@ var spawn_interval: float = 1.0 # Spawn every 1 second
 
 # Bullet color textures
 var bullet_colors = [
-	"res://assets/textures/randomShot.png",
-	"res://assets/textures/randomShot2.png",
-	"res://assets/textures/randomShot3.png",
-	"res://assets/textures/randomShot4.png"
+	"res://assets/textures/bullets/bullet_randomShot.png",
+	"res://assets/textures/bullets/bullet_randomShot2.png",
+	"res://assets/textures/bullets/bullet_randomShot3.png",
+	"res://assets/textures/bullets/bullet_randomShot4.png"
 ]
 
 # Random number generator

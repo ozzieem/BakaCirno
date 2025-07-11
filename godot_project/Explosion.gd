@@ -15,7 +15,7 @@ var texture: Texture2D
 
 func _ready():
 	# Load explosion texture
-	texture = load("res://assets/textures/EnemyExplosion.png")
+	texture = load("res://assets/textures/effects/fx_EnemyExplosion.png")
 	if sprite and texture:
 		sprite.texture = texture
 		sprite.region_enabled = true

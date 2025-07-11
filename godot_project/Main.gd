@@ -107,9 +107,9 @@ func setup_game_objects():
 
 func load_assets():
 	# Load background textures
-	game_background.set_texture("res://assets/textures/spacebgtemp.png")
-	menu_background.set_texture("res://assets/textures/mainbg2temp.png")
-	high_score_background.set_texture("res://assets/textures/highscorebgtemp.png")
+	game_background.set_texture("res://assets/textures/backgrounds/bg_spacebgtemp.png")
+	menu_background.set_texture("res://assets/textures/backgrounds/bg_mainbg2temp.png")
+	high_score_background.set_texture("res://assets/textures/backgrounds/bg_highscorebgtemp.png")
 
 	# Load and setup audio
 	sound_manager.load_sounds()
@@ -297,7 +297,7 @@ func spawn_points():
 			for circle_shots in enemy.circle_shots:
 				for bullet in circle_shots.bullets:
 					var point_bullet = preload("res://PointBullet.tscn").instantiate()
-					point_bullet.setup_point_bullet(load("res://assets/textures/pointBullethalfsize.png"), bullet.position)
+					point_bullet.setup_point_bullet(load("res://assets/textures/bullets/bullet_pointBullethalfsize.png"), bullet.position)
 					add_child(point_bullet)
 					point_bullets.append(point_bullet)
 					text_overlay.add_score(5)
@@ -335,10 +335,10 @@ func update_explosions(delta):
 
 func update_enemies(delta):
 	var enemy_textures = [
-		"res://assets/textures/greenEnemy.png",
-		"res://assets/textures/redEnemy.png",
-		"res://assets/textures/yellowEnemy.png",
-		"res://assets/textures/blueEnemy.png"
+		"res://assets/textures/enemies/enemy_greenEnemy.png",
+		"res://assets/textures/enemies/enemy_redEnemy.png",
+		"res://assets/textures/enemies/enemy_yellowEnemy.png",
+		"res://assets/textures/enemies/enemy_blueEnemy.png"
 	]
 
 	# Update existing enemies
@@ -483,8 +483,8 @@ func create_point_bullet_from_bullet(bullet):
 
 	# Load point bullet texture with fallback
 	var point_texture: Texture2D
-	if ResourceLoader.exists("res://assets/textures/pointBullethalfsize.png"):
-		point_texture = load("res://assets/textures/pointBullethalfsize.png")
+	if ResourceLoader.exists("res://assets/textures/bullets/bullet_pointBullethalfsize.png"):
+		point_texture = load("res://assets/textures/bullets/bullet_pointBullethalfsize.png")
 	else:
 		# Create fallback point texture
 		var image = Image.create(16, 16, false, Image.FORMAT_RGB8)
