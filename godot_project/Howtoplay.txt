@@ -1,0 +1,4 @@
+﻿The game' objectives are to kill as many enemies as possible 
+Survive as long as possible to gather points
+Gather even more points by letting enemies shoot out more bullets before you kill them
+
