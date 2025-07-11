@@ -2,7 +2,6 @@ extends Area2D
 class_name Enemy
 
 # Enemy properties
-var texture: Texture2D
 var enemy_speed: float = 50.0 # 50 pixels/sec
 var health: float = 100.0
 var is_visible: bool = true
@@ -28,7 +27,7 @@ var speed_increase: float = 0.0
 var enemy_deaths: float = 0.0
 
 # Node references
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 # Sound manager
@@ -64,37 +63,83 @@ func set_sound_manager(sound_mgr: Sound):
 	sound_manager = sound_mgr
 
 func set_texture(texture_path: String):
-	# Load texture with fallback
-	if ResourceLoader.exists(texture_path):
-		texture = load(texture_path)
+	# Determine enemy color from texture path
+	var color_name = ""
+	if "green" in texture_path.to_lower():
+		color_name = "green"
+	elif "red" in texture_path.to_lower():
+		color_name = "red"
+	elif "yellow" in texture_path.to_lower():
+		color_name = "yellow"
+	elif "blue" in texture_path.to_lower():
+		color_name = "blue"
 	else:
+		color_name = "green" # Default fallback
+
+	# Create SpriteFrames resource
+	var sprite_frames = SpriteFrames.new()
+	sprite_frames.add_animation("flap")
+	sprite_frames.set_animation_speed("flap", 8.0) # 8 FPS animation
+	sprite_frames.set_animation_loop("flap", true)
+
+	# Load the strip texture
+	var strip_path = "res://assets/textures/enemies/enemy_" + color_name + "_enemy_flap_strip.png"
+	var strip_texture = load(strip_path)
+
+	if strip_texture:
+		# Get actual texture dimensions
+		var total_width = strip_texture.get_width()
+		var total_height = strip_texture.get_height()
+		var frame_count = 4
+
+		# Calculate frame dimensions based on actual texture size
+		var frame_width = total_width / frame_count
+		var frame_height = total_height
+
+		# Create individual frames from the strip
+		for i in range(frame_count):
+			var atlas_texture = AtlasTexture.new()
+			atlas_texture.atlas = strip_texture
+			atlas_texture.region = Rect2(i * frame_width, 0, frame_width, frame_height)
+			sprite_frames.add_frame("flap", atlas_texture)
+
+		# Assign the SpriteFrames to the AnimatedSprite2D
+		if animated_sprite:
+			animated_sprite.sprite_frames = sprite_frames
+			animated_sprite.animation = "flap"
+			animated_sprite.play()
+
+			# Update collision shape based on actual frame size
+			if collision_shape and collision_shape.shape is RectangleShape2D:
+				var rect_shape = collision_shape.shape as RectangleShape2D
+				rect_shape.size = Vector2(frame_width, frame_height)
+	else:
+		print("ERROR: Failed to load enemy strip texture: ", strip_path)
 		# Create fallback texture based on enemy type
 		var color = Color.GREEN
-		if "red" in texture_path.to_lower():
+		if color_name == "red":
 			color = Color.RED
-		elif "yellow" in texture_path.to_lower():
+		elif color_name == "yellow":
 			color = Color.YELLOW
-		elif "blue" in texture_path.to_lower():
+		elif color_name == "blue":
 			color = Color.BLUE
 
-		var image = Image.create(64, 64, false, Image.FORMAT_RGB8)
+		var image = Image.create(30, 26, false, Image.FORMAT_RGB8)
 		image.fill(color)
-		texture = ImageTexture.new()
-		texture.set_image(image)
+		var fallback_texture = ImageTexture.new()
+		fallback_texture.set_image(image)
 
-	if sprite and texture:
-		sprite.texture = texture
+		# Create single frame animation as fallback
+		sprite_frames.add_frame("flap", fallback_texture)
+		if animated_sprite:
+			animated_sprite.sprite_frames = sprite_frames
+			animated_sprite.animation = "flap"
+			animated_sprite.play()
 
-		# Update collision shape based on texture size
-		if collision_shape and collision_shape.shape is RectangleShape2D:
-			var rect_shape = collision_shape.shape as RectangleShape2D
-			rect_shape.size = Vector2(texture.get_width() * 2, texture.get_height())
-	else:
-		print("ERROR: Failed to assign enemy texture - sprite:", sprite, " texture:", texture)
-		if not sprite:
-			sprite = get_node_or_null("Sprite2D")
-			if sprite:
-				sprite.texture = texture
+			# Update collision shape for fallback
+			if collision_shape and collision_shape.shape is RectangleShape2D:
+				var rect_shape = collision_shape.shape as RectangleShape2D
+				rect_shape.size = Vector2(30, 26)
 
 func set_difficulty(deaths: float):
 	enemy_deaths = deaths
@@ -219,8 +264,8 @@ func check_collision(player: Player):
 		is_visible = false
 		return
 
-	# Check collision with player body
-	var collision_area = Rect2(position - Vector2(60, 0), Vector2(texture.get_width() * 2, texture.get_height()) if texture else Vector2(64, 64))
+	# Check collision with player body - use average sprite size for collision area
+	var collision_area = Rect2(position - Vector2(15, 13), Vector2(30, 26))
 	var player_area = Rect2(player.position, Vector2(64, 128))
 
 	if collision_area.intersects(player_area):

@@ -335,10 +335,10 @@ func update_explosions(delta):
 
 func update_enemies(delta):
 	var enemy_textures = [
-		"res://assets/textures/enemies/enemy_greenEnemy.png",
-		"res://assets/textures/enemies/enemy_redEnemy.png",
-		"res://assets/textures/enemies/enemy_yellowEnemy.png",
-		"res://assets/textures/enemies/enemy_blueEnemy.png"
+		"res://assets/textures/enemies/enemy_green_enemy_flap_strip.png",
+		"res://assets/textures/enemies/enemy_red_enemy_flap_strip.png",
+		"res://assets/textures/enemies/enemy_yellow_enemy_flap_strip.png",
+		"res://assets/textures/enemies/enemy_blue_enemy_flap_strip.png"
 	]
 
 	# Update existing enemies
