@@ -34,9 +34,8 @@ var rng = RandomNumberGenerator.new()
 func _ready():
 	rng.randomize()
 
-	# Create sound manager
-	sound_manager = Sound.new()
-	add_child(sound_manager)
+func set_sound_manager(sound_mgr: Sound):
+	sound_manager = sound_mgr
 
 func setup(pos: Vector2, speed: float):
 	spawn_position = pos

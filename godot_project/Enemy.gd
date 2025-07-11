@@ -3,7 +3,7 @@ class_name Enemy
 
 # Enemy properties
 var texture: Texture2D
-var enemy_speed: float = 0.5 * 60.0 # Adjusted for delta time
+var enemy_speed: float = 50.0 # 50 pixels/sec
 var health: float = 100.0
 var is_visible: bool = true
 
@@ -15,7 +15,7 @@ var origin: Vector2
 var shot_delay: float = 0.0
 var max_shot_delay: float = 1.67 # 100 frames at 60fps converted to seconds
 var n_circle_spawns: int = 0
-var max_circle_spawns: int = 5
+var max_circle_spawns: int = 10
 var max_random_bullets: int = 10
 var random_bullets_spawned: int = 0
 
@@ -60,9 +60,8 @@ func _ready():
 	n_circle_spawns = rng.randi_range(2, max_circle_spawns)
 	random_bullets_spawned = 0
 
-	# Create sound manager
-	sound_manager = Sound.new()
-	add_child(sound_manager)
+func set_sound_manager(sound_mgr: Sound):
+	sound_manager = sound_mgr
 
 func set_texture(texture_path: String):
 	# Load texture with fallback
@@ -146,6 +145,10 @@ func update_shooting(delta: float, player: Player):
 	if not is_visible:
 		return
 
+	# Don't shoot if enemy is still off-screen (above viewport)
+	if position.y < 0:
+		return
+
 	# Increase speed based on enemy deaths
 	speed_increase += delta * enemy_deaths
 
@@ -168,6 +171,10 @@ func enemy_shot():
 		circle_shot.setup(origin, speed_increase)
 		get_parent().add_child(circle_shot)
 		circle_shots.append(circle_shot)
+
+		# Pass sound manager to circle shot
+		if sound_manager:
+			circle_shot.set_sound_manager(sound_manager)
 
 		# Play sound
 		if sound_manager:

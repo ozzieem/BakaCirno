@@ -7,7 +7,7 @@ var is_visible: bool = true
 var difference: Vector2
 
 # Movement speed in pixels per second
-var x_move_speed: float = 600.0 # Horizontal speed (pixels/sec)
+var x_move_speed: float = 800.0 # Horizontal speed (pixels/sec)
 var y_move_speed: float = x_move_speed * 2 # Vertical speed (pixels/sec)
 
 # Node references

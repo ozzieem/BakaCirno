@@ -31,6 +31,7 @@ var enemy_difficulty: float = 0.0
 # Audio
 var game_music: AudioStreamPlayer
 var sound_manager: Sound
+var music_started: bool = false
 
 # Backgrounds
 var game_background: Background
@@ -90,6 +91,8 @@ func setup_game_objects():
 	# Create player
 	player = preload("res://Player.tscn").instantiate()
 	add_child(player)
+	# Pass sound manager to player
+	player.set_sound_manager(sound_manager)
 
 	# Create text overlay (should be on top)
 	text_overlay = preload("res://TextOverlay.tscn").instantiate()
@@ -111,6 +114,16 @@ func load_assets():
 	# Load and setup audio
 	sound_manager.load_sounds()
 	game_music = sound_manager.get_playing_song()
+
+	# Debug: Check if music is properly loaded
+	if game_music:
+		print("Game music loaded successfully")
+		if game_music.stream:
+			print("Music stream assigned: ", game_music.stream.resource_path if game_music.stream.has_method("get_path") else "stream loaded")
+		else:
+			print("WARNING: Music stream is null!")
+	else:
+		print("ERROR: Failed to get game music!")
 
 func _process(delta):
 	# Check if player is dead (only transition once)
@@ -168,6 +181,23 @@ func handle_input():
 	if Input.is_action_just_pressed("debug_exit"):
 		get_tree().quit()
 
+	# TESTING: Fix music settings and test with Delete key
+	if Input.is_action_just_pressed("ui_text_delete"): # Delete key
+		print("🔧 FIXING MUSIC SETTINGS AND TESTING")
+		if sound_manager:
+			sound_manager.fix_and_test_music()
+		else:
+			print("❌ Cannot fix - sound_manager is null")
+
+	# TESTING: WAV file analysis with Insert key
+	if Input.is_action_just_pressed("ui_text_completion_replace"): # Insert key
+		print("🔍 ANALYZING MUSIC FILE")
+		if sound_manager:
+			sound_manager.analyze_music_file()
+		else:
+			print("❌ Cannot analyze - sound_manager is null")
+
+
 	# Start game if Enter or Space is pressed (only from menu)
 	if (Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("shoot")) and current_state == GameState.MENU:
 		print("Starting new game")
@@ -179,6 +209,13 @@ func handle_input():
 		current_state = GameState.PLAYING
 		game_reset_done = false # Reset flag when starting game
 		death_transition_done = false # Reset death transition flag only when starting new game
+
+		# # Force music to start immediately
+		# if game_music and game_music.stream and not music_started:
+		# 	game_music.volume_db = -25
+		# 	game_music.play()
+		# 	music_started = true
+		# 	print("Force started game music on game start")
 
 func update_ui_visibility():
 	# Update UI based on current state
@@ -239,19 +276,32 @@ func reset_game():
 	text_overlay.reset_stats()
 	sound_played = false
 
+	# TESTING: Reset music state so it can start in menu
+	if game_music and game_music.playing:
+		game_music.stop()
+	music_started = false
+	print("🎵 Music state reset - ready to start in menu")
+
 	print("Game reset completed")
 
 func activate_game_music():
-	# Start music during gameplay
-	if not player.is_dead and current_state == GameState.PLAYING:
-		if game_music and not game_music.playing:
-			game_music.volume_db = -25 # Equivalent to 0.05f volume
+	# Also try to start music during gameplay (original logic)
+	if current_state == GameState.PLAYING and not player.is_dead and not music_started:
+		if game_music and game_music.stream:
+			game_music.volume_db = -20
 			game_music.play()
+			music_started = true
+			print("🎵 Started game music during gameplay")
+			print("Music playing status: ", game_music.playing)
+		else:
+			print("❌ ERROR: Cannot start music during gameplay - game_music or stream is null")
 
-	# Stop music during menu or death
-	if player.is_colliding or player.is_dead or current_state == GameState.MENU:
+	# Stop music during game over or when player dies
+	if current_state == GameState.GAME_OVER and music_started:
 		if game_music and game_music.playing:
 			game_music.stop()
+		music_started = false
+		print("🎵 Stopped game music (game over)")
 
 func spawn_points():
 	for enemy in enemies:
@@ -327,6 +377,9 @@ func update_enemies(delta):
 		enemy.set_difficulty(enemy_difficulty)
 		add_child(enemy)
 		enemies.append(enemy)
+
+		# Pass sound manager to enemy
+		enemy.set_sound_manager(sound_manager)
 
 		# Set texture after adding to scene tree to ensure nodes are ready
 		enemy.set_texture(enemy_textures[enemy_type])

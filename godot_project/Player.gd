@@ -71,11 +71,10 @@ func _ready():
 	# Hide collision shapes (disable debug drawing)
 	hide_collision_shapes()
 
-	# Create sound manager
-	sound_manager = Sound.new()
-	add_child(sound_manager)
-
 	print("Player initialized at position: ", position)
+
+func set_sound_manager(sound_mgr: Sound):
+	sound_manager = sound_mgr
 
 func load_player_assets():
 	# Load animation textures with fallbacks
@@ -232,7 +231,7 @@ func shoot():
 	if bullet_delay_timer <= 0:
 		# Play shoot sound
 		if sound_manager:
-			sound_manager.play_player_shoot()
+			sound_manager.play_player_shoot(power_shot)
 
 		# Create bullet
 		var bullet = preload("res://Bullet.tscn").instantiate()
