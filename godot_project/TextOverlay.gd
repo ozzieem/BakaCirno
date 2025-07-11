@@ -7,13 +7,13 @@ var time: float = 0.0
 var enemies_killed: float = 0.0
 var difficulty_multiplier: float = 0.0
 
-# UI positions (matching C# MonoGame version)
-var score_position: Vector2 = Vector2(0, 100)
-var time_position: Vector2 = Vector2(0, 130)
-var enemies_killed_position: Vector2 = Vector2(0, 150)
-var difficulty_position: Vector2 = Vector2(0, 170)
-var control_info_position: Vector2 = Vector2(50, 900)
-var info_position: Vector2 = Vector2(150, 800)
+# UI positions (moved to bottom of screen - 920x950 window)
+var score_position: Vector2 = Vector2(10, 850)
+var time_position: Vector2 = Vector2(10, 880)
+var enemies_killed_position: Vector2 = Vector2(10, 910)
+var difficulty_position: Vector2 = Vector2(10, 940)
+var control_info_position: Vector2 = Vector2(10, 780)
+var info_position: Vector2 = Vector2(10, 810)
 
 # Font resource
 var font: Font
