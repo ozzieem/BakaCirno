@@ -1,7 +1,0 @@
-# Placeholder files for testing without assets
-# These files allow the project to run in Godot without the original assets
-
-# Create a simple placeholder texture
-[gd_resource type="ImageTexture" format=3]
-
-[resource]

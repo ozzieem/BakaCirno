@@ -255,7 +255,7 @@ func shoot():
 			sound_manager.play_player_shoot(power_shot)
 
 		# Create bullet
-		var bullet = preload("res://Bullet.tscn").instantiate()
+		var bullet = preload("res://scenes/Bullet.tscn").instantiate()
 		get_parent().add_child(bullet)
 
 		# Setup bullet

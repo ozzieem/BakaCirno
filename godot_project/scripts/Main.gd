@@ -72,9 +72,9 @@ func _ready():
 
 func setup_game_objects():
 	# Create backgrounds first (so they render behind everything)
-	game_background = preload("res://Background.tscn").instantiate()
-	menu_background = preload("res://Background.tscn").instantiate()
-	high_score_background = preload("res://Background.tscn").instantiate()
+	game_background = preload("res://scenes/Background.tscn").instantiate()
+	menu_background = preload("res://scenes/Background.tscn").instantiate()
+	high_score_background = preload("res://scenes/Background.tscn").instantiate()
 	add_child(game_background)
 	add_child(menu_background)
 	add_child(high_score_background)
@@ -89,18 +89,18 @@ func setup_game_objects():
 	add_child(sound_manager)
 
 	# Create player
-	player = preload("res://Player.tscn").instantiate()
+	player = preload("res://scenes/Player.tscn").instantiate()
 	add_child(player)
 	# Pass sound manager to player
 	player.set_sound_manager(sound_manager)
 
 	# Create text overlay (should be on top)
-	text_overlay = preload("res://TextOverlay.tscn").instantiate()
+	text_overlay = preload("res://scenes/TextOverlay.tscn").instantiate()
 	add_child(text_overlay)
 	text_overlay.z_index = 100
 
 	# Create high score text
-	high_score_text = preload("res://HighScoreText.tscn").instantiate()
+	high_score_text = preload("res://scenes/HighScoreText.tscn").instantiate()
 	add_child(high_score_text)
 	high_score_text.setup_with_overlay(text_overlay)
 	high_score_text.visible = false
@@ -296,7 +296,7 @@ func spawn_points():
 			# Spawn points from enemy bullet patterns
 			for circle_shots in enemy.circle_shots:
 				for bullet in circle_shots.bullets:
-					var point_bullet = preload("res://PointBullet.tscn").instantiate()
+					var point_bullet = preload("res://scenes/PointBullet.tscn").instantiate()
 					point_bullet.setup_point_bullet(load("res://assets/textures/bullets/bullet_pointBullethalfsize.png"), bullet.position)
 					add_child(point_bullet)
 					point_bullets.append(point_bullet)
@@ -359,7 +359,7 @@ func update_enemies(delta):
 		var rand_y = rng.randi_range(-200, -50)
 		var enemy_type = rng.randi_range(0, enemy_textures.size() - 1)
 
-		var enemy = preload("res://Enemy.tscn").instantiate()
+		var enemy = preload("res://scenes/Enemy.tscn").instantiate()
 		enemy.position = Vector2(rand_x, rand_y)
 		enemy.set_difficulty(enemy_difficulty)
 		add_child(enemy)
@@ -397,7 +397,7 @@ func update_enemies(delta):
 			enemies.remove_at(i)
 
 func create_explosion(pos: Vector2):
-	var explosion = preload("res://Explosion.tscn").instantiate()
+	var explosion = preload("res://scenes/Explosion.tscn").instantiate()
 	explosion.position = pos
 	add_child(explosion)
 	explosions.append(explosion)
@@ -479,7 +479,7 @@ func convert_enemy_bullets_to_points(enemy: Enemy):
 
 func create_point_bullet_from_bullet(bullet):
 	# Create a point bullet at the same position as the enemy bullet
-	var point_bullet = preload("res://PointBullet.tscn").instantiate()
+	var point_bullet = preload("res://scenes/PointBullet.tscn").instantiate()
 
 	# Load point bullet texture with fallback
 	var point_texture: Texture2D

@@ -68,7 +68,7 @@ func circle_pattern(delta: float, enemy: Enemy):
 		velocity.y = sin(angle_rad)
 
 		# Create new bullet
-		var bullet = preload("res://Bullet.tscn").instantiate()
+		var bullet = preload("res://scenes/Bullet.tscn").instantiate()
 		get_parent().add_child(bullet)
 
 		# Position bullet at enemy center

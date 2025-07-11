@@ -66,7 +66,7 @@ func random_pattern(delta: float, player: Player):
 			bullet_velocity.y += 30.0 # Add slight downward bias
 
 			# Create new bullet
-			var bullet = preload("res://Bullet.tscn").instantiate()
+			var bullet = preload("res://scenes/Bullet.tscn").instantiate()
 			get_parent().add_child(bullet)
 
 			var bullet_texture = load(bullet_colors[color_index])
