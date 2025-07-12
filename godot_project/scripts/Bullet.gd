@@ -17,6 +17,9 @@ var screen_size: Vector2
 # Custom behavior system
 var custom_behaviors: Dictionary = {}
 
+# Conversion tracking
+var prevent_auto_cleanup: bool = false # Prevents automatic cleanup for conversion
+
 func _ready():
 	# Connect collision signal
 	area_entered.connect(_on_area_entered)
@@ -43,7 +46,7 @@ func setup_bullet(texture: Texture2D, start_position: Vector2, bullet_velocity: 
 		rect_shape.size = Vector2(texture.get_width(), texture.get_height())
 
 func _process(delta):
-	if not is_visible:
+	if not is_visible and not prevent_auto_cleanup:
 		queue_free()
 		return
 
@@ -60,10 +63,11 @@ func update_rotation(delta):
 		rotation += rotation_speed * delta
 
 func check_screen_bounds():
-	# Remove bullet if it goes off screen
+	# Mark bullet as invisible if it goes off screen, but don't auto-cleanup if conversion is pending
 	if position.x < -20 or position.x > screen_size.x + 20 or \
 	   position.y < -20 or position.y > screen_size.y + 20:
 		is_visible = false
+		# Note: We don't queue_free() here anymore - let the conversion system handle cleanup
 
 func _on_area_entered(area):
 	# Handle collision with other areas
@@ -107,3 +111,12 @@ func get_custom_behavior(behavior_name: String, default_value = null):
 func has_custom_behavior(behavior_name: String) -> bool:
 	"""Check if bullet has a custom behavior"""
 	return behavior_name in custom_behaviors
+
+# Conversion tracking methods
+func set_prevent_auto_cleanup(prevent: bool):
+	"""Set whether to prevent automatic cleanup for conversion"""
+	prevent_auto_cleanup = prevent
+
+func force_cleanup():
+	"""Force cleanup regardless of prevent_auto_cleanup setting"""
+	queue_free()

@@ -14,6 +14,7 @@ var target_position: Vector2
 # Pattern configuration
 var pattern_params: PatternParameters
 var bullets: Array[Bullet] = []
+var pattern_manager: PatternManager = null # Reference to the PatternManager
 
 # Pattern lifecycle
 var spawn_delay: float = 0.0
@@ -148,6 +149,11 @@ func spawn_bullet(texture: Texture2D, pos: Vector2, velocity: Vector2, speed: fl
 	bullet.set_bullet_type(false) # Mark as enemy bullet
 
 	bullets.append(bullet)
+
+	# Register bullet with PatternManager for global tracking
+	if pattern_manager:
+		pattern_manager.register_bullet(bullet)
+
 	emit_signal("bullet_spawned", bullet)
 
 	return bullet
@@ -171,13 +177,16 @@ func get_bullet_texture(color_name: String = "") -> Texture2D:
 	return pattern_texture
 
 func cleanup_destroyed_bullets():
-	"""Remove bullets that are no longer visible"""
+	"""Remove bullets that are no longer visible, but respect prevent_auto_cleanup"""
 	for i in range(bullets.size() - 1, -1, -1):
 		var bullet = bullets[i]
-		if not bullet or not is_instance_valid(bullet) or not bullet.is_visible:
-			if bullet and is_instance_valid(bullet):
-				emit_signal("bullet_destroyed", bullet)
-				bullet.queue_free()
+		if not bullet or not is_instance_valid(bullet):
+			# Remove invalid bullets
+			bullets.remove_at(i)
+		elif not bullet.is_visible and not bullet.prevent_auto_cleanup:
+			# Only remove invisible bullets if they're not flagged for conversion
+			emit_signal("bullet_destroyed", bullet)
+			bullet.queue_free()
 			bullets.remove_at(i)
 
 func clear_all_bullets():

@@ -12,6 +12,9 @@ var pattern_presets: Dictionary = {}
 var active_patterns: Array[BulletPattern] = []
 var pattern_queue: Array[Dictionary] = []
 
+# Global bullet tracking - tracks ALL bullets from ALL patterns (active and completed)
+var all_bullets: Array[Bullet] = []
+
 # Pattern selection
 var current_difficulty: float = 1.0
 var pattern_weights: Dictionary = {}
@@ -143,6 +146,7 @@ func spawn_pattern(pattern_name: String, spawn_pos: Vector2, target_pos: Vector2
 	# Configure pattern
 	pattern.setup_pattern(spawn_pos, target_pos, params)
 	pattern.set_sound_manager(sound_manager)
+	pattern.pattern_manager = self # Set reference to this PatternManager
 
 	# Force specific color if provided
 	if force_color != "":
@@ -312,14 +316,39 @@ func update_active_patterns(delta: float):
 	for i in range(active_patterns.size() - 1, -1, -1):
 		var pattern = active_patterns[i]
 		if not pattern or not is_instance_valid(pattern) or pattern.is_pattern_complete():
+			# Pattern is complete, remove from active patterns
+			# NOTE: Bullets from this pattern are still tracked in all_bullets array
 			active_patterns.remove_at(i)
+			# Don't queue_free the pattern immediately - let it clean up naturally
+			# The bullets will still be tracked in all_bullets for conversion
 
 func clear_all_patterns():
 	"""Clear all active patterns immediately"""
+	# First clean up all tracked bullets
+	for bullet in all_bullets:
+		if bullet and is_instance_valid(bullet):
+			bullet.force_cleanup()
+	all_bullets.clear()
+
+	# Clear patterns
 	for pattern in active_patterns:
 		if pattern and is_instance_valid(pattern):
 			pattern.is_active = false
 			pattern.clear_all_bullets() # Clear bullets immediately
+			pattern.queue_free()
+	active_patterns.clear()
+	pattern_queue.clear()
+
+	# Stop auto-spawning
+	auto_spawn_enabled = false
+
+func clear_patterns_without_bullets():
+	"""Clear all active patterns but preserve bullets (used when bullets are converted to points)"""
+	for pattern in active_patterns:
+		if pattern and is_instance_valid(pattern):
+			pattern.is_active = false
+			# Don't clear bullets - they've already been converted to points
+			pattern.bullets.clear() # Clear the reference array but bullets remain in scene
 			pattern.queue_free()
 	active_patterns.clear()
 	pattern_queue.clear()
@@ -369,20 +398,65 @@ func get_all_active_bullets() -> Array[Bullet]:
 	for pattern in active_patterns:
 		if pattern and is_instance_valid(pattern):
 			for bullet in pattern.bullets:
-				if bullet and is_instance_valid(bullet) and bullet.is_visible:
+				# Include all valid bullets, even if off-screen (is_visible = false)
+				if bullet and is_instance_valid(bullet):
 					all_bullets.append(bullet)
 
 	return all_bullets
 
 func convert_all_bullets_to_points(point_creator_callback: Callable):
-	"""Convert all active bullets to point bullets using a callback"""
+	"""Convert all bullets to point bullets using a callback - uses global bullet tracking"""
 	var total_converted = 0
 
-	for pattern in active_patterns:
-		if pattern and is_instance_valid(pattern):
-			total_converted += pattern.convert_bullets_to_points(point_creator_callback)
+	# First clean up invalid bullets
+	cleanup_invalid_bullets()
+
+	# Convert all tracked bullets (from active AND completed patterns, including off-screen ones)
+	for i in range(all_bullets.size() - 1, -1, -1):
+		var bullet = all_bullets[i]
+		if bullet and is_instance_valid(bullet):
+			# Convert ALL bullets, even if they're off-screen (is_visible = false)
+			# This ensures off-screen bullets are also converted to point bullets
+			point_creator_callback.call(bullet)
+			bullet.is_visible = false # Ensure bullet is hidden after conversion
+			# Force cleanup now that bullet has been converted
+			bullet.force_cleanup()
+			total_converted += 1
+
+		# Remove bullet from tracking (converted or invalid)
+		all_bullets.remove_at(i)
 
 	return total_converted
+
+# Global bullet tracking methods
+func register_bullet(bullet: Bullet):
+	"""Register a bullet in the global tracking system"""
+	if bullet and is_instance_valid(bullet) and bullet not in all_bullets:
+		all_bullets.append(bullet)
+		# Enable conversion tracking to prevent automatic cleanup
+		bullet.set_prevent_auto_cleanup(true)
+
+func unregister_bullet(bullet: Bullet):
+	"""Unregister a bullet from the global tracking system"""
+	if bullet in all_bullets:
+		all_bullets.erase(bullet)
+		# Re-enable automatic cleanup
+		if bullet and is_instance_valid(bullet):
+			bullet.set_prevent_auto_cleanup(false)
+
+func cleanup_invalid_bullets():
+	"""Remove invalid bullets from the global tracking system"""
+	for i in range(all_bullets.size() - 1, -1, -1):
+		var bullet = all_bullets[i]
+		# Only remove bullets that are truly invalid (null or freed)
+		# Keep bullets that are just invisible (off-screen) so they can be converted to points
+		if not bullet or not is_instance_valid(bullet):
+			all_bullets.remove_at(i)
+
+func get_all_tracked_bullets() -> Array[Bullet]:
+	"""Get all bullets from the global tracking system (active and completed patterns)"""
+	cleanup_invalid_bullets()
+	return all_bullets.duplicate()
 
 # Signal handlers
 func _on_pattern_started(pattern: BulletPattern):

@@ -21,6 +21,7 @@ var pattern_manager: PatternManager
 var assigned_pattern: String = "" # Pattern assigned to this enemy for its entire lifetime
 var assigned_bullet_color: String = "" # Bullet color assigned to this enemy for its entire lifetime
 var attack_count: int = 0 # Number of attacks this enemy has performed
+var single_pattern_mode: bool = true # If true, enemy uses only one pattern type throughout its lifetime
 
 # Legacy pattern arrays (for backward compatibility)
 var random_bullets: Array[RandomShots] = []
@@ -95,7 +96,7 @@ func setup_pattern_manager():
 	pattern_manager.set_sound_manager(sound_manager)
 
 	# Configure pattern manager settings
-	pattern_manager.auto_spawn_enabled = true
+	pattern_manager.auto_spawn_enabled = not single_pattern_mode # Disable auto-spawn for single pattern mode
 	pattern_manager.min_pattern_interval = 1.0
 	pattern_manager.max_pattern_interval = 3.0
 
@@ -418,6 +419,7 @@ func clear_all_bullets():
 	# Stop auto-spawning immediately
 	if pattern_manager:
 		pattern_manager.auto_spawn_enabled = false
+		# Clear patterns - the conversion method already cleared bullets
 		pattern_manager.clear_all_patterns()
 
 	# Also clear legacy patterns for backward compatibility
@@ -433,14 +435,15 @@ func clear_all_bullets():
 func convert_bullets_to_points_on_death():
 	"""Convert bullets to points when enemy dies - called internally"""
 	if pattern_manager:
-		var bullets_to_convert = pattern_manager.get_all_active_bullets()
-		for bullet in bullets_to_convert:
-			if bullet and is_instance_valid(bullet) and bullet.is_visible:
-				# Call main game's conversion method
-				var main_scene = get_parent()
-				if main_scene and main_scene.has_method("create_point_bullet_from_bullet"):
-					main_scene.create_point_bullet_from_bullet(bullet)
-					bullet.is_visible = false
+		# Use the pattern manager's built-in conversion method
+		var main_scene = get_parent()
+		if main_scene and main_scene.has_method("create_point_bullet_from_bullet"):
+			# Create a callback that calls the main scene's method
+			var point_creator_callback = Callable(main_scene, "create_point_bullet_from_bullet")
+			var total_converted = pattern_manager.convert_all_bullets_to_points(point_creator_callback)
+
+			if total_converted > 0:
+				print("Enemy converted ", total_converted, " spiral bullets to point bullets")
 
 func get_enemy_bullet_color() -> String:
 	"""Get the bullet color assigned to this enemy"""

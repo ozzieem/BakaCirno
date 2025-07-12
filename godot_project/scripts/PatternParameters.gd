@@ -193,10 +193,10 @@ static func create_spiral_preset() -> PatternParameters:
 	"""Create preset for Archimedean spiral patterns"""
 	var params = PatternParameters.new()
 	params.pattern_type = PatternType.SPIRAL
-	params.bullet_density = 120 # More bullets for smooth spiral
+	params.bullet_density = 40 # More bullets for smooth spiral
 	params.bullet_speed = 120.0 # Moderate speed
 	params.spawn_rate = 60.0 # Fast spawning for smooth spiral
-	params.pattern_duration = 3.0 # Shorter duration per attack
+	params.pattern_duration = 10.0 # Shorter duration per attack
 
 	# Set custom parameters for Archimedean spiral
 	params.set_custom_param("spiral_arms", 1)

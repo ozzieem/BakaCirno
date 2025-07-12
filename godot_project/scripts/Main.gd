@@ -24,7 +24,7 @@ var explosions: Array[Explosion] = []
 var point_bullets: Array[PointBullet] = []
 
 # Game constants and variables
-const N_ENEMIES_SPAWN = 1
+const N_ENEMIES_SPAWN = 5
 const enemy_difficulty_increase: float = 0.1
 var enemy_difficulty: float = 0.0
 
@@ -400,14 +400,12 @@ func update_enemies(delta):
 			if enemy.pattern_manager:
 				enemy.pattern_manager.auto_spawn_enabled = false
 
-			# Convert enemy bullets to point bullets BEFORE clearing
-			convert_enemy_bullets_to_points(enemy)
-
 			# Spawn points and explosion
 			spawn_points()
 			create_explosion(enemy.position)
 
 			# Clear remaining bullets and remove enemy
+			# NOTE: clear_all_bullets() will handle bullet conversion internally
 			enemy.clear_all_bullets()
 			enemy.queue_free()
 			enemies.remove_at(i)
