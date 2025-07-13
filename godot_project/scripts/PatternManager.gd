@@ -81,6 +81,7 @@ func register_default_patterns():
 	pattern_registry["spiral"] = SpiralPattern
 	pattern_registry["wave"] = WavePattern
 	pattern_registry["star"] = StarPattern
+	pattern_registry["star_outline"] = StarPattern
 	pattern_registry["random"] = RandomPattern
 	pattern_registry["burst"] = BurstPattern
 
@@ -90,6 +91,7 @@ func register_default_patterns():
 		"spiral": 0.8,
 		"wave": 0.6,
 		"star": 0.4,
+		"star_outline": 0.3,
 		"random": 1.2,
 		"burst": 0.5
 	}
@@ -108,6 +110,53 @@ func setup_default_presets():
 	pattern_presets["easy_spiral"].difficulty_scale = 0.7
 
 	pattern_presets["normal_spiral"] = PatternParameters.create_spiral_preset()
+
+	pattern_presets["easy_star"] = PatternParameters.create_star_preset()
+	pattern_presets["easy_star"].difficulty_scale = 0.8
+	pattern_presets["easy_star"].bullet_speed = 150.0 # Slower for easier dodging
+	pattern_presets["easy_star"].set_custom_param("star_points", 5) # Classic 5-pointed star
+	pattern_presets["easy_star"].set_custom_param("bullets_per_ray", 2) # Fewer bullets per ray
+	pattern_presets["easy_star"].set_custom_param("outer_radius", 50.0) # Smaller initial radius
+	pattern_presets["easy_star"].set_custom_param("bullet_spacing", 25.0) # More spacing between bullets
+	pattern_presets["easy_star"].set_custom_param("ray_spread_factor", 1.2) # Less spread
+
+	pattern_presets["normal_star"] = PatternParameters.create_star_preset()
+	pattern_presets["normal_star"].set_custom_param("star_points", 6) # 6-pointed star
+	pattern_presets["normal_star"].set_custom_param("bullets_per_ray", 13) # Standard bullets per ray
+	pattern_presets["normal_star"].set_custom_param("outer_radius", 60.0) # Standard radius
+
+	pattern_presets["hard_star"] = PatternParameters.create_star_preset()
+	pattern_presets["hard_star"].difficulty_scale = 1.3
+	pattern_presets["hard_star"].bullet_speed = 220.0 # Faster bullets
+	pattern_presets["hard_star"].set_custom_param("star_points", 8) # 8-pointed star
+	pattern_presets["hard_star"].set_custom_param("bullets_per_ray", 4) # More bullets per ray
+	pattern_presets["hard_star"].set_custom_param("outer_radius", 70.0) # Larger initial radius
+	pattern_presets["hard_star"].set_custom_param("bullet_spacing", 15.0) # Tighter spacing
+	pattern_presets["hard_star"].set_custom_param("ray_spread_factor", 2.0) # More spread
+	pattern_presets["hard_star"].set_custom_param("inner_radius_factor", 0.3) # Deeper valleys
+
+	# Star outline presets
+	pattern_presets["easy_star_outline"] = PatternParameters.create_star_outline_preset()
+	pattern_presets["easy_star_outline"].difficulty_scale = 0.8
+	pattern_presets["easy_star_outline"].bullet_speed = 140.0 # Slower for easier dodging
+	pattern_presets["easy_star_outline"].set_custom_param("star_points", 5) # Classic 5-pointed star
+	pattern_presets["easy_star_outline"].set_custom_param("outer_radius", 180.0) # Smaller radius
+	pattern_presets["easy_star_outline"].set_custom_param("inner_radius_factor", 0.5) # Shallower valleys
+	pattern_presets["easy_star_outline"].set_custom_param("outline_thickness", 3) # Thinner outline
+
+	pattern_presets["normal_star_outline"] = PatternParameters.create_star_outline_preset()
+	pattern_presets["normal_star_outline"].set_custom_param("star_points", 6) # 6-pointed star
+	pattern_presets["normal_star_outline"].set_custom_param("outer_radius", 220.0) # Standard radius
+	pattern_presets["normal_star_outline"].set_custom_param("inner_radius_factor", 0.45) # Standard valleys
+	pattern_presets["normal_star_outline"].set_custom_param("outline_thickness", 4) # Standard thickness
+
+	pattern_presets["hard_star_outline"] = PatternParameters.create_star_outline_preset()
+	pattern_presets["hard_star_outline"].difficulty_scale = 1.3
+	pattern_presets["hard_star_outline"].bullet_speed = 180.0 # Faster bullets
+	pattern_presets["hard_star_outline"].set_custom_param("star_points", 8) # 8-pointed star
+	pattern_presets["hard_star_outline"].set_custom_param("outer_radius", 260.0) # Larger radius
+	pattern_presets["hard_star_outline"].set_custom_param("inner_radius_factor", 0.4) # Deeper valleys
+	pattern_presets["hard_star_outline"].set_custom_param("outline_thickness", 5) # Thicker outline
 
 	pattern_presets["easy_random"] = PatternParameters.create_random_preset()
 	pattern_presets["easy_random"].difficulty_scale = 0.9
@@ -241,7 +290,10 @@ func is_pattern_available(pattern_name: String) -> bool:
 	if pattern_name == "wave" and current_difficulty >= 1.2:
 		return true
 
-	if pattern_name == "star" and current_difficulty >= 1.5:
+	if pattern_name == "star" and current_difficulty >= 1.1:
+		return true
+
+	if pattern_name == "star_outline" and current_difficulty >= 1.4:
 		return true
 
 	if pattern_name == "burst" and current_difficulty >= 1.3:
@@ -271,6 +323,8 @@ func get_default_params_for_pattern(pattern_name: String) -> PatternParameters:
 			return PatternParameters.create_wave_preset()
 		"star":
 			return PatternParameters.create_star_preset()
+		"star_outline":
+			return PatternParameters.create_star_outline_preset()
 		"random":
 			return PatternParameters.create_random_preset()
 		_:
@@ -295,6 +349,8 @@ func queue_pattern(pattern_name: String, delay: float = 0.0, spawn_pos: Vector2 
 		"params": params,
 		"timer": 0.0
 	})
+	print("Queued pattern: ", pattern_name, " with delay: ", delay, " seconds",
+		" at position: ", spawn_pos, " targeting: ", target_pos, ", with params: ", params)
 
 func process_pattern_queue():
 	"""Process queued patterns"""

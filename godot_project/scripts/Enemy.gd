@@ -71,11 +71,11 @@ func _ready():
 	# Initialize pattern manager
 	setup_pattern_manager()
 
-	# Assign a pattern for this enemy's entire lifetime
-	assign_pattern()
-
 	# Assign a bullet color for this enemy's entire lifetime
 	assign_bullet_color()
+
+	# Pattern assignment will be done after difficulty is set
+	# assign_pattern() will be called from set_difficulty()
 
 	# Initialize debug display
 	update_debug_display()
@@ -109,8 +109,17 @@ func assign_pattern():
 	if assigned_pattern != "":
 		return # Already assigned
 
+	# Testing
+	# assigned_pattern = "star"
+	return
+
+	# Ensure we have a pattern manager
+	if not pattern_manager:
+		assigned_pattern = "circle" # Fallback
+		return
+
 	# Get all available patterns (excluding random)
-	var all_patterns = ["circle", "spiral", "wave", "star", "burst"]
+	var all_patterns = ["circle", "spiral", "wave", "star", "star_outline", "burst"]
 	var available_patterns = []
 
 	for pattern_name in all_patterns:
@@ -225,6 +234,12 @@ func set_difficulty(deaths: float):
 	if pattern_manager and pattern_manager.difficulty_scaler:
 		pattern_manager.difficulty_scaler.enemy_kills = int(deaths)
 		pattern_manager.difficulty_scaler.current_difficulty = 1.0 + deaths * 0.1
+
+		# Force difficulty update in pattern manager
+		pattern_manager.current_difficulty = 1.0 + deaths * 0.1
+
+		# Now assign pattern with updated difficulty
+		assign_pattern()
 
 func update_movement(delta: float, player: Player):
 	if not is_visible:
@@ -396,6 +411,9 @@ func update_debug_display():
 	if debug_label:
 		if show_debug_info:
 			debug_label.text = "Pattern: " + current_pattern_type
+			debug_label.text += "\nHealth: " + str(health)
+			debug_label.text += "\nSpeed: " + str(enemy_speed)
+			debug_label.text += "\nAttack Count: " + str(attack_count)
 			debug_label.visible = true
 		else:
 			debug_label.visible = false

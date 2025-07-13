@@ -24,7 +24,7 @@ var explosions: Array[Explosion] = []
 var point_bullets: Array[PointBullet] = []
 
 # Game constants and variables
-const N_ENEMIES_SPAWN = 5
+const N_ENEMIES_SPAWN = 1
 const enemy_difficulty_increase: float = 0.1
 var enemy_difficulty: float = 0.0
 
@@ -368,8 +368,8 @@ func update_enemies(delta):
 
 		var enemy = preload("res://scenes/Enemy.tscn").instantiate()
 		enemy.position = Vector2(rand_x, rand_y)
-		enemy.set_difficulty(enemy_difficulty)
 		add_child(enemy)
+		enemy.set_difficulty(enemy_difficulty)
 		enemies.append(enemy)
 
 		# Pass sound manager to enemy
