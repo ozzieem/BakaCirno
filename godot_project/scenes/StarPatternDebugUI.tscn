@@ -1,0 +1,172 @@
+[gd_scene load_steps=2 format=3 uid="uid://bj8w2vr6nlr0t"]
+
+[ext_resource type="Script" path="res://scripts/StarPatternDebugUI.gd" id="1_debug_ui"]
+
+[node name="StarPatternDebugUI" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+anchor_left = 0.02
+anchor_top = 0.02
+anchor_right = 0.4
+anchor_bottom = 0.98
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_debug_ui")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="Title" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Star Pattern Tweaker"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StarPointsContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StarPointsLabel" type="Label" parent="VBoxContainer/StarPointsContainer"]
+layout_mode = 2
+text = "Star Points: 5"
+
+[node name="StarPointsSlider" type="HSlider" parent="VBoxContainer/StarPointsContainer"]
+layout_mode = 2
+min_value = 3.0
+max_value = 12.0
+step = 1.0
+value = 5.0
+
+[node name="OuterRadiusContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="OuterRadiusLabel" type="Label" parent="VBoxContainer/OuterRadiusContainer"]
+layout_mode = 2
+text = "Outer Radius: 60"
+
+[node name="OuterRadiusSlider" type="HSlider" parent="VBoxContainer/OuterRadiusContainer"]
+layout_mode = 2
+min_value = 30.0
+max_value = 150.0
+step = 5.0
+value = 60.0
+
+[node name="InnerRadiusFactorContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="InnerRadiusFactorLabel" type="Label" parent="VBoxContainer/InnerRadiusFactorContainer"]
+layout_mode = 2
+text = "Inner Radius Factor: 0.4"
+
+[node name="InnerRadiusFactorSlider" type="HSlider" parent="VBoxContainer/InnerRadiusFactorContainer"]
+layout_mode = 2
+min_value = 0.2
+max_value = 0.8
+step = 0.05
+value = 0.4
+
+[node name="BulletSpeedContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="BulletSpeedLabel" type="Label" parent="VBoxContainer/BulletSpeedContainer"]
+layout_mode = 2
+text = "Bullet Speed: 180"
+
+[node name="BulletSpeedSlider" type="HSlider" parent="VBoxContainer/BulletSpeedContainer"]
+layout_mode = 2
+min_value = 80.0
+max_value = 300.0
+step = 10.0
+value = 180.0
+
+[node name="BulletsPerRayContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="BulletsPerRayLabel" type="Label" parent="VBoxContainer/BulletsPerRayContainer"]
+layout_mode = 2
+text = "Bullets Per Ray: 3"
+
+[node name="BulletsPerRaySlider" type="HSlider" parent="VBoxContainer/BulletsPerRayContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 8.0
+step = 1.0
+value = 3.0
+
+[node name="BulletSpacingContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="BulletSpacingLabel" type="Label" parent="VBoxContainer/BulletSpacingContainer"]
+layout_mode = 2
+text = "Bullet Spacing: 20"
+
+[node name="BulletSpacingSlider" type="HSlider" parent="VBoxContainer/BulletSpacingContainer"]
+layout_mode = 2
+min_value = 10.0
+max_value = 40.0
+step = 2.0
+value = 20.0
+
+[node name="OutlineThicknessContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="OutlineThicknessLabel" type="Label" parent="VBoxContainer/OutlineThicknessContainer"]
+layout_mode = 2
+text = "Outline Thickness: 4"
+
+[node name="OutlineThicknessSlider" type="HSlider" parent="VBoxContainer/OutlineThicknessContainer"]
+layout_mode = 2
+min_value = 1.0
+max_value = 8.0
+step = 1.0
+value = 4.0
+
+[node name="PatternSelectorContainer" type="VBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PatternLabel" type="Label" parent="VBoxContainer/PatternSelectorContainer"]
+layout_mode = 2
+text = "Pattern: Star"
+
+[node name="PatternSelector" type="OptionButton" parent="VBoxContainer/PatternSelectorContainer"]
+layout_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reset"
+
+[node name="ForceStarButton" type="Button" parent="VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Force Star"
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Press F2 to toggle this panel
+Changes apply to new star patterns
+Current difficulty: 1.0"
+autowrap_mode = 2

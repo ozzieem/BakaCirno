@@ -220,17 +220,17 @@ static func create_star_preset() -> PatternParameters:
 	var params = PatternParameters.new()
 	params.pattern_type = PatternType.STAR
 	params.bullet_density = 148 # Bullets per star point/ray
-	params.bullet_speed = 120.0 # Moderate speed for visibility
+	params.bullet_speed = 80.0 # Moderate speed for visibility
 	params.spread_angle = 360.0 # Full circle for proper star formation
 	params.spawn_rate = 1.0 # Single burst spawn
 	params.pattern_duration = 10.0 # Longer duration for bullets to travel
 
 	# Star-specific parameters
-	params.set_custom_param("star_points", 6) # 5-pointed star
+	params.set_custom_param("star_points", 6) # 6-pointed star
 	params.set_custom_param("ray_length", 220) # 5-pointed star
-	params.set_custom_param("inner_radius_factor", 0.3) # Controls how deep the inner valleys go (0.4 = 40% of outer radius)
-	params.set_custom_param("bullets_per_ray", 1) # Number of bullets per tip/valley
-	params.set_custom_param("outer_radius", 60.0) # Initial outer radius (close to enemy)
+	params.set_custom_param("inner_radius_factor", 0.25) # Controls how deep the inner valleys go
+	params.set_custom_param("bullets_per_ray", 3) # Number of bullets per tip/valley
+	params.set_custom_param("outer_radius", 85.0) # Initial outer radius (close to enemy)
 	params.set_custom_param("ray_spread_factor", 1.5) # How much bullets spread out as they travel
 	params.set_custom_param("bullet_spacing", 20.0) # Distance between bullets along each ray
 	params.set_custom_param("complex_star", false) # Simple star by default
@@ -242,13 +242,14 @@ static func create_star_preset() -> PatternParameters:
 static func create_star_outline_preset() -> PatternParameters:
 	var params = PatternParameters.new()
 	params.pattern_type = PatternType.STAR
-	params.bullet_speed = 160.0
+	params.bullet_speed = 80.0
 	params.pattern_duration = 8.0
 	params.spawn_rate = 1.0
-	params.set_custom_param("star_points", 5)
-	params.set_custom_param("outer_radius", 220.0)
-	params.set_custom_param("inner_radius_factor", 0.45)
-	params.set_custom_param("outline_thickness", 4)
+	params.set_custom_param("star_points", 6)
+	params.set_custom_param("outer_radius", 85.0)
+	params.set_custom_param("inner_radius_factor", 0.25)
+	params.set_custom_param("outline_thickness", 3)
+	return params
 	return params
 
 

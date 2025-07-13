@@ -111,7 +111,7 @@ func assign_pattern():
 
 	# Testing
 	# assigned_pattern = "star"
-	return
+	# return
 
 	# Ensure we have a pattern manager
 	if not pattern_manager:
@@ -361,6 +361,10 @@ func check_collision(player: Player):
 		player.take_damage()
 
 func take_damage(damage: int, is_power_shot: bool = false):
+	# Debug enemies are invincible
+	if has_meta("is_debug_enemy") and get_meta("is_debug_enemy") == true:
+		return
+
 	if is_power_shot:
 		health -= 30
 	else:

@@ -1,4 +1,5 @@
 extends Node2D
+class_name Main
 
 # Game state enumeration
 enum GameState {
@@ -42,12 +43,16 @@ var high_score_background: Background
 @onready var menu_container = $UI/MenuContainer
 @onready var game_over_container = $UI/GameOverContainer
 
+# Debug UI
+var star_pattern_debug_ui: StarPatternDebugUI
+
 # Random number generator
 var rng = RandomNumberGenerator.new()
 
 # Debug state
 var debug_mode_active: bool = false
 var player_invincible: bool = false
+var player_can_shoot: bool = true
 
 func _ready():
 	# Initialize the random number generator
@@ -71,6 +76,9 @@ func _ready():
 
 	# Set initial UI state
 	update_ui_visibility()
+
+	# Initialize debug UI
+	setup_debug_ui()
 
 	print("BakaCirno initialized - Press Enter to start!")
 
@@ -207,6 +215,16 @@ func handle_input():
 		# 	music_started = true
 		# 	print("Force started game music on game start")
 
+func handle_debug_input():
+	"""Handle debug input actions"""
+	# Toggle debug enemy info with I key
+	if Input.is_action_just_pressed("debug_enemy_info"):
+		toggle_enemy_debug_info()
+
+	# Exit game with F12 key
+	if Input.is_action_just_pressed("debug_exit"):
+		get_tree().quit()
+
 func update_ui_visibility():
 	# Update UI based on current state
 	match current_state:
@@ -254,7 +272,7 @@ func reset_game():
 	player.reset_animation()
 
 	# Maintain debug invincibility state during reset
-	if debug_mode_active:
+	if debug_mode_active or is_debug_ui_active():
 		player.set_invincible(true)
 
 	# Clear player bullets
@@ -360,8 +378,8 @@ func update_enemies(delta):
 		enemy.update_movement(delta, player)
 		enemy.update_shooting(delta, player)
 
-	# Spawn new enemies if needed
-	if enemies.size() < N_ENEMIES_SPAWN:
+	# Spawn new enemies if needed (but not when debug UI is active)
+	if enemies.size() < N_ENEMIES_SPAWN and not is_debug_ui_active():
 		var rand_x = rng.randi_range(0, 750)
 		var rand_y = rng.randi_range(-200, -50)
 		var enemy_type = rng.randi_range(0, enemy_textures.size() - 1)
@@ -379,7 +397,7 @@ func update_enemies(delta):
 		enemy.set_texture(enemy_textures[enemy_type])
 
 		# Set debug info state if debug mode is active
-		if debug_mode_active:
+		if debug_mode_active || is_debug_ui_active():
 			enemy.set_debug_info(true)
 
 	# Remove dead enemies and create explosions
@@ -541,14 +559,63 @@ func toggle_enemy_debug_info():
 	var status = "enabled" if debug_mode_active else "disabled"
 	print("Debug mode ", status, " - Player invincibility ", status)
 
-func handle_debug_input():
-	"""Handle debug input commands"""
-	# Toggle enemy debug info with I key
-	if Input.is_action_just_pressed("debug_enemy_info"):
-		toggle_enemy_debug_info()
-		var mode_text = "ON" if debug_mode_active else "OFF"
-		print("Debug mode: ", mode_text, " | Enemy info: ", mode_text, " | Player invincibility: ", mode_text)
+func setup_debug_ui():
+	"""Initialize the debug UI"""
+	# Load and instantiate the StarPatternDebugUI
+	var debug_ui_scene = preload("res://scenes/StarPatternDebugUI.tscn")
+	star_pattern_debug_ui = debug_ui_scene.instantiate()
 
-	# Exit game with F12
-	if Input.is_action_just_pressed("debug_exit"):
-		get_tree().quit()
+	# Add to UI layer
+	$UI.add_child(star_pattern_debug_ui)
+
+	# Set reference to main scene
+	star_pattern_debug_ui.set_main_scene(self)
+
+	print("StarPatternDebugUI initialized - Press F2 to toggle")
+
+func is_debug_ui_active() -> bool:
+	"""Check if the star pattern debug UI is currently active"""
+	return star_pattern_debug_ui != null and star_pattern_debug_ui.visible
+
+func pause_music():
+	"""Pause the game music"""
+	if game_music and game_music.playing:
+		game_music.stream_paused = true
+		print("🎵 Music paused for debug mode")
+
+func resume_music():
+	"""Resume the game music"""
+	if game_music and game_music.stream_paused:
+		game_music.stream_paused = false
+		print("🎵 Music resumed from debug mode")
+
+func get_player_position() -> Vector2:
+	"""Get the player position for enemy targeting"""
+	if player and is_instance_valid(player):
+		return player.position
+	return Vector2.ZERO
+
+func set_player_invincible(invincible: bool):
+	"""Set player invincibility state"""
+	player_invincible = invincible
+	if player:
+		player.set_invincible(player_invincible)
+	var status = "enabled" if invincible else "disabled"
+	print("Player invincibility ", status, " by debug UI")
+
+func set_player_can_shoot(can_shoot: bool):
+	"""Set player shooting state"""
+	player_can_shoot = can_shoot
+	if player:
+		player.set_can_shoot(player_can_shoot)
+	var status = "enabled" if can_shoot else "disabled"
+	print("Player shooting ", status, " by debug UI")
+
+func _unhandled_input(event):
+	"""Handle unhandled input events"""
+	if event is InputEventKey and event.pressed:
+		# Toggle star pattern debug UI with F2
+		if event.keycode == KEY_F2:
+			if star_pattern_debug_ui:
+				star_pattern_debug_ui.toggle_visibility()
+			get_viewport().set_input_as_handled()
