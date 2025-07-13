@@ -19,6 +19,8 @@ script = ExtResource("1_rq4hw")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 visible = false
 
+[node name="LifeBubbleContainer" type="Node2D" parent="."]
+
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_1")
 

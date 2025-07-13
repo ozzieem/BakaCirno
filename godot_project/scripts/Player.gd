@@ -63,6 +63,16 @@ var bullet_delay_timer: float = 0.0
 @onready var bullet_collision_area: Area2D = $BulletCollisionArea
 @onready var point_collision_area: Area2D = $PointCollisionArea
 
+# Life bubble visual nodes
+@onready var life_bubble_container: Node2D = $LifeBubbleContainer
+@onready var bubble_sprites: Array[Sprite2D] = []
+
+# Visual bubble properties
+var bubble_rotation_speed: float = 1.0
+var bubble_orbit_radius: float = 45.0
+var bubble_scale_animation: float = 0.0
+var bubble_pulse_speed: float = 3.0
+
 # Sound manager
 var sound_manager: Sound
 
@@ -87,6 +97,9 @@ func _ready():
 
 	# Setup collision
 	setup_collision()
+
+	# Setup life bubble visuals
+	setup_life_bubble_visuals()
 
 	# Hide collision shapes (disable debug drawing)
 	hide_collision_shapes()
@@ -160,6 +173,64 @@ func setup_collision():
 	else:
 		print("WARNING: point_collision_area not found!")
 
+func setup_life_bubble_visuals():
+	"""Setup visual life bubble representations around the player"""
+	# Create container if it doesn't exist
+	if not life_bubble_container:
+		life_bubble_container = Node2D.new()
+		life_bubble_container.name = "LifeBubbleContainer"
+		add_child(life_bubble_container)
+	
+	# Clear existing bubbles
+	bubble_sprites.clear()
+	for child in life_bubble_container.get_children():
+		child.queue_free()
+	
+	# Create bubble sprites for each life bubble
+	for i in range(max_life_bubble_health):
+		var bubble_sprite = Sprite2D.new()
+		
+		# Create a circular bubble texture
+		var bubble_texture = create_bubble_texture()
+		bubble_sprite.texture = bubble_texture
+		
+		# Set initial properties
+		bubble_sprite.scale = Vector2(0.8, 0.8)
+		bubble_sprite.modulate = Color(0.4, 0.8, 1.0, 0.7) # Light blue with transparency
+		
+		# Position bubbles in a circle around the player
+		var angle = (i * 2 * PI) / max_life_bubble_health
+		var offset = Vector2(cos(angle), sin(angle)) * bubble_orbit_radius
+		bubble_sprite.position = offset
+		
+		life_bubble_container.add_child(bubble_sprite)
+		bubble_sprites.append(bubble_sprite)
+
+func create_bubble_texture() -> Texture2D:
+	"""Create a bubble texture programmatically"""
+	var image = Image.create(24, 24, false, Image.FORMAT_RGBA8)
+	
+	# Create a circular bubble with gradient
+	for x in range(24):
+		for y in range(24):
+			var center = Vector2(12, 12)
+			var distance = Vector2(x, y).distance_to(center)
+			
+			if distance <= 11:
+				# Inner bright circle
+				if distance <= 8:
+					var alpha = 0.6 - (distance / 8.0) * 0.3
+					image.set_pixel(x, y, Color(0.7, 0.9, 1.0, alpha))
+				# Outer ring
+				else:
+					var alpha = (11 - distance) / 3.0 * 0.4
+					image.set_pixel(x, y, Color(0.5, 0.8, 1.0, alpha))
+			else:
+				image.set_pixel(x, y, Color.TRANSPARENT)
+	
+	var texture = ImageTexture.create_from_image(image)
+	return texture
+
 func hide_collision_shapes():
 	# Disable debug drawing for collision shapes to prevent black boxes
 	if collision_shape:
@@ -190,6 +261,9 @@ func _process(delta):
 
 	# Update life-bubble system
 	update_life_bubble(delta)
+	
+	# Update bubble visuals
+	update_bubble_visuals(delta)
 
 	if not is_colliding:
 		animate(delta)
@@ -207,7 +281,7 @@ func _process(delta):
 	if power_shot_toggle_cooldown > 0:
 		power_shot_toggle_cooldown -= delta
 
-func handle_input(delta):
+func handle_input(_delta):
 	if is_colliding:
 		return
 
@@ -428,6 +502,9 @@ func take_damage():
 		life_bubble_flash_timer = life_bubble_flash_duration
 		print("Life bubble took damage! Health: ", life_bubble_health, "/", max_life_bubble_health)
 
+		# Enhanced visual feedback for bubble damage
+		trigger_bubble_damage_effect()
+
 		# Visual feedback - flash the sprite
 		if sprite:
 			sprite.modulate = Color.RED
@@ -447,6 +524,61 @@ func take_damage():
 		is_colliding = true
 		sound_played = false
 		death_timer = 0.0
+
+func trigger_bubble_damage_effect():
+	"""Trigger visual effect when a bubble is damaged"""
+	if not life_bubble_container or bubble_sprites.size() == 0:
+		return
+	
+	# Find the bubble that was just damaged and create destruction effect
+	var damaged_bubble_index = life_bubble_health # The bubble that was just destroyed
+	if damaged_bubble_index < bubble_sprites.size():
+		var damaged_bubble = bubble_sprites[damaged_bubble_index]
+		if damaged_bubble and is_instance_valid(damaged_bubble):
+			# Create shatter effect
+			create_bubble_shatter_effect(damaged_bubble.global_position)
+
+func create_bubble_shatter_effect(shatter_position: Vector2):
+	"""Create a visual shatter effect when a bubble is destroyed"""
+	# Create multiple small fragments
+	for i in range(6):
+		var fragment = Sprite2D.new()
+		var fragment_texture = create_fragment_texture()
+		fragment.texture = fragment_texture
+		fragment.modulate = Color(0.6, 0.9, 1.0, 0.8) # Light blue fragments
+		fragment.scale = Vector2(0.3, 0.3)
+		get_parent().add_child(fragment)
+		fragment.global_position = shatter_position
+		
+		# Random direction for fragments
+		var angle = (i * PI / 3) + randf() * PI / 6 # Spread fragments around
+		var direction = Vector2(cos(angle), sin(angle))
+		var target_pos = shatter_position + direction * 20
+		
+		var tween = create_tween()
+		tween.parallel().tween_property(fragment, "global_position", target_pos, 0.4)
+		tween.parallel().tween_property(fragment, "modulate:a", 0.0, 0.4)
+		tween.parallel().tween_property(fragment, "rotation", randf() * PI * 2, 0.4)
+		tween.tween_callback(fragment.queue_free)
+
+func create_fragment_texture() -> Texture2D:
+	"""Create a small fragment texture for bubble destruction"""
+	var image = Image.create(6, 6, false, Image.FORMAT_RGBA8)
+	
+	# Create an irregular fragment shape
+	var pixels = [
+		Vector2(2, 1), Vector2(3, 1), Vector2(4, 1),
+		Vector2(1, 2), Vector2(2, 2), Vector2(3, 2), Vector2(4, 2),
+		Vector2(2, 3), Vector2(3, 3), Vector2(4, 3),
+		Vector2(3, 4)
+	]
+	
+	for pixel in pixels:
+		if pixel.x >= 0 and pixel.x < 6 and pixel.y >= 0 and pixel.y < 6:
+			image.set_pixel(int(pixel.x), int(pixel.y), Color(1.0, 1.0, 1.0, 0.8))
+	
+	var texture = ImageTexture.create_from_image(image)
+	return texture
 
 func set_invincible(invincible: bool):
 	"""Set player invincibility state for debug mode"""
@@ -480,6 +612,9 @@ func refill_life_bubble(amount: int = 1):
 	if life_bubble_health < max_life_bubble_health:
 		life_bubble_health = min(life_bubble_health + amount, max_life_bubble_health)
 		print("Life bubble refilled! Health: ", life_bubble_health, "/", max_life_bubble_health)
+		
+		# Visual feedback for refill
+		trigger_bubble_refill_effect()
 		return true
 	return false
 
@@ -489,17 +624,24 @@ func restore_life_bubble_full():
 		life_bubble_health = max_life_bubble_health
 		life_bubble_recovery_timer = 0.0
 		print("Life bubble fully restored! Health: ", life_bubble_health, "/", max_life_bubble_health)
+		
+		# Visual feedback for full restore
+		trigger_bubble_refill_effect()
 		return true
 	return false
 
-func get_life_bubble_info() -> Dictionary:
-	"""Get life bubble information for UI display"""
-	return {
-		"active": life_bubble_active,
-		"health": life_bubble_health,
-		"max_health": max_life_bubble_health,
-		"recovery_time": life_bubble_recovery_timer
-	}
+func trigger_bubble_refill_effect():
+	"""Trigger visual effect when bubbles are refilled"""
+	if life_bubble_container:
+		# Flash effect for all bubbles
+		for i in range(bubble_sprites.size()):
+			if i < life_bubble_health:
+				var bubble = bubble_sprites[i]
+				if bubble and is_instance_valid(bubble):
+					# Brief bright flash
+					bubble.modulate = Color.WHITE
+					var tween = create_tween()
+					tween.tween_property(bubble, "modulate", Color(0.4, 0.8, 1.0, 0.8), 0.3)
 
 func update_life_bubble(delta: float):
 	"""Update life bubble system"""
@@ -525,6 +667,37 @@ func update_life_bubble(delta: float):
 		var bubble_alpha = 0.3 + (float(life_bubble_health) / float(max_life_bubble_health)) * 0.4
 		var bubble_color = Color(0.5, 0.8, 1.0, bubble_alpha) # Light blue tint
 		sprite.modulate = sprite.modulate.lerp(bubble_color, 0.1)
+
+func update_bubble_visuals(delta: float):
+	"""Update visual bubble effects around the player"""
+	if not life_bubble_active or not life_bubble_container:
+		return
+	
+	# Update animation timers
+	bubble_scale_animation += delta * bubble_pulse_speed
+	if life_bubble_container:
+		life_bubble_container.rotation += delta * bubble_rotation_speed
+	
+	# Update each bubble sprite based on current health
+	for i in range(bubble_sprites.size()):
+		var bubble = bubble_sprites[i]
+		if not bubble or not is_instance_valid(bubble):
+			continue
+			
+		# Show/hide bubbles based on current health
+		if i < life_bubble_health:
+			bubble.visible = true
+			# Healthy bubble - bright and pulsing
+			var bubble_scale_factor = 1.0 + sin(bubble_scale_animation + i * 0.5) * 0.1
+			bubble.scale = Vector2(0.8, 0.8) * bubble_scale_factor
+			bubble.modulate = Color(0.4, 0.8, 1.0, 0.8)
+		elif i < max_life_bubble_health:
+			bubble.visible = true
+			# Damaged/empty bubble - dim and smaller
+			bubble.scale = Vector2(0.5, 0.5)
+			bubble.modulate = Color(0.2, 0.4, 0.6, 0.3)
+		else:
+			bubble.visible = false
 
 func _on_bullet_collision(area):
 	# Handle collision with enemy bullets only
