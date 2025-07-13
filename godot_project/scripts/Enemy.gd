@@ -2,7 +2,7 @@ extends Area2D
 class_name Enemy
 
 # Enemy properties
-var enemy_speed: float = 50.0 # 50 pixels/sec
+var enemy_speed: float = 100.0 # 50 pixels/sec
 var health: float = 100.0
 var is_visible: bool = true
 

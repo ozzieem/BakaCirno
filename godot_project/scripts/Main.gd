@@ -25,9 +25,26 @@ var explosions: Array[Explosion] = []
 var point_bullets: Array[PointBullet] = []
 
 # Game constants and variables
-const N_ENEMIES_SPAWN = 1
+const N_ENEMIES_SPAWN = 3
 const enemy_difficulty_increase: float = 0.1
 var enemy_difficulty: float = 0.0
+
+# Boss system variables
+var boss_spawn_threshold: int = 10 # Spawn boss every 10 kills
+var current_boss: BossEnemy = null
+var boss_active: bool = false
+var boss_level: int = 1
+var kills_since_last_boss: int = 0
+
+# Boss warning system variables
+var boss_warning_active: bool = false
+var boss_warning_time: float = 5.0 # 5 seconds warning time (increased from 3)
+var boss_warning_timer: float = 0.0
+
+# Boss spawn delay system variables
+var boss_spawn_delay_active: bool = false
+var boss_spawn_delay_time: float = 2.0 # 2 seconds delay after last enemy kill
+var boss_spawn_delay_timer: float = 0.0
 
 # Audio
 var game_music: AudioStreamPlayer
@@ -175,6 +192,8 @@ func update_playing_state(delta):
 	update_enemies(delta)
 	update_point_bullets(delta)
 	update_explosions(delta)
+	update_boss_spawn_delay(delta)
+	update_boss_warning(delta)
 	text_overlay.update_time(delta)
 	text_overlay.set_difficulty_multiplier(enemy_difficulty)
 
@@ -288,6 +307,23 @@ func reset_game():
 	text_overlay.reset_stats()
 	sound_played = false
 
+	# Reset boss system
+	boss_active = false
+	current_boss = null
+	boss_level = 1
+	kills_since_last_boss = 0
+
+	# Reset boss warning system
+	boss_warning_active = false
+	boss_warning_timer = 0.0
+
+	# Reset boss spawn delay system
+	boss_spawn_delay_active = false
+	boss_spawn_delay_timer = 0.0
+
+	# Reset life-bubble system to full health (permanent now)
+	player.restore_life_bubble_full()
+
 	# TESTING: Reset music state so it can start in menu
 	if game_music and game_music.playing:
 		game_music.stop()
@@ -326,6 +362,27 @@ func spawn_points():
 					add_child(point_bullet)
 					point_bullets.append(point_bullet)
 					text_overlay.add_score(5)
+
+func spawn_life_bubble_refill(enemy_position: Vector2, is_boss: bool = false):
+	"""Spawn a life bubble refill at the given position"""
+	var refill = preload("res://scenes/LifeBubbleRefill.tscn").instantiate()
+	refill.position = enemy_position
+
+	if is_boss:
+		# Boss drops full restore
+		refill.setup_refill(0, true)
+		add_child(refill)
+	else:
+		# Regular enemy drops single refill (chance based)
+		var drop_chance = rng.randf()
+		if drop_chance < 0.3: # 30% chance to drop refill
+			refill.setup_refill(1, false)
+			add_child(refill)
+		else:
+			refill.queue_free()
+			return
+
+	print("Life bubble refill spawned at position: ", enemy_position, " (boss: ", is_boss, ")")
 
 func update_point_bullets(delta):
 	for i in range(point_bullets.size() - 1, -1, -1):
@@ -378,27 +435,33 @@ func update_enemies(delta):
 		enemy.update_movement(delta, player)
 		enemy.update_shooting(delta, player)
 
-	# Spawn new enemies if needed (but not when debug UI is active)
-	if enemies.size() < N_ENEMIES_SPAWN and not is_debug_ui_active():
-		var rand_x = rng.randi_range(0, 750)
-		var rand_y = rng.randi_range(-200, -50)
-		var enemy_type = rng.randi_range(0, enemy_textures.size() - 1)
+	# Check if we should trigger boss spawn delay
+	if should_trigger_boss_spawn_delay() and not is_debug_ui_active():
+		trigger_boss_spawn_delay()
+	# Spawn new enemies if needed (but not when debug UI is active, boss is active, or boss delay/warning is active)
+	elif enemies.size() < N_ENEMIES_SPAWN and not is_debug_ui_active() and not boss_active and not boss_warning_active and not boss_spawn_delay_active:
+		# Spawn multiple enemies to reach N_ENEMIES_SPAWN
+		var enemies_to_spawn = N_ENEMIES_SPAWN - enemies.size()
+		for i in range(enemies_to_spawn):
+			var rand_x = rng.randi_range(0, 750)
+			var rand_y = rng.randi_range(-200, -50)
+			var enemy_type = rng.randi_range(0, enemy_textures.size() - 1)
 
-		var enemy = preload("res://scenes/Enemy.tscn").instantiate()
-		enemy.position = Vector2(rand_x, rand_y)
-		add_child(enemy)
-		enemy.set_difficulty(enemy_difficulty)
-		enemies.append(enemy)
+			var enemy = preload("res://scenes/Enemy.tscn").instantiate()
+			enemy.position = Vector2(rand_x, rand_y)
+			add_child(enemy)
+			enemy.set_difficulty(enemy_difficulty)
+			enemies.append(enemy)
 
-		# Pass sound manager to enemy
-		enemy.set_sound_manager(sound_manager)
+			# Pass sound manager to enemy
+			enemy.set_sound_manager(sound_manager)
 
-		# Set texture after adding to scene tree to ensure nodes are ready
-		enemy.set_texture(enemy_textures[enemy_type])
+			# Set texture after adding to scene tree to ensure nodes are ready
+			enemy.set_texture(enemy_textures[enemy_type])
 
-		# Set debug info state if debug mode is active
-		if debug_mode_active || is_debug_ui_active():
-			enemy.set_debug_info(true)
+			# Set debug info state if debug mode is active
+			if debug_mode_active || is_debug_ui_active():
+				enemy.set_debug_info(true)
 
 	# Remove dead enemies and create explosions
 	for i in range(enemies.size() - 1, -1, -1):
@@ -407,12 +470,37 @@ func update_enemies(delta):
 			# Play death sound
 			sound_manager.play_enemy_death()
 
+			# Check if this is a boss enemy
+			var is_boss = enemy.has_method("is_boss") and enemy.is_boss()
+
+			if is_boss:
+				# Boss defeated
+				boss_active = false
+				current_boss = null
+				boss_level += 1
+				kills_since_last_boss = 0
+
+				# Spawn life bubble full restore from boss
+				spawn_life_bubble_refill(enemy.position, true)
+
+				# Give bonus rewards for boss
+				text_overlay.add_enemies_killed(1)
+				text_overlay.add_score(5000 + (boss_level * 1000)) # Bonus score for boss
+
+				print("Boss defeated! Next boss level: ", boss_level, " - Life bubble full restore dropped!")
+			else:
+				# Regular enemy defeated
+				text_overlay.add_enemies_killed(1)
+				text_overlay.add_score(500)
+				kills_since_last_boss += 1
+
+				# Spawn life bubble refill (chance based)
+				spawn_life_bubble_refill(enemy.position, false)
+
+				print("Regular enemy defeated. Kills since last boss: ", kills_since_last_boss, "/", boss_spawn_threshold)
+
 			# Increase difficulty
 			enemy_difficulty += enemy_difficulty_increase
-
-			# Update stats
-			text_overlay.add_enemies_killed(1)
-			text_overlay.add_score(500)
 
 			# IMPORTANT: First stop enemy from spawning new bullets
 			if enemy.pattern_manager:
@@ -442,19 +530,21 @@ func clear_enemies():
 	enemies.clear()
 
 func clear_point_bullets():
+	"""Clear all point bullets from the game"""
 	for point in point_bullets:
 		if point and is_instance_valid(point):
 			point.queue_free()
 	point_bullets.clear()
 
 func clear_explosions():
+	"""Clear all explosions from the game"""
 	for explosion in explosions:
 		if explosion and is_instance_valid(explosion):
 			explosion.queue_free()
 	explosions.clear()
 
 func clear_all_game_objects():
-	# Clear all game objects when transitioning to GAME_OVER state
+	"""Clear all game objects when transitioning to GAME_OVER state"""
 	print("Clearing all game objects for GAME_OVER state")
 
 	# Clear player bullets using the player's method
@@ -470,6 +560,133 @@ func clear_all_game_objects():
 	clear_explosions()
 
 	print("All game objects cleared for GAME_OVER state")
+
+func should_spawn_boss() -> bool:
+	"""Check if a boss should be spawned"""
+	return (
+		kills_since_last_boss >= boss_spawn_threshold and
+		not boss_active and
+		current_boss == null and
+		not boss_warning_active
+		# Note: Removed enemies.size() == 0 condition to allow boss spawning
+	)
+
+func should_trigger_boss_warning() -> bool:
+	"""Check if a boss warning should be triggered"""
+	return (
+		kills_since_last_boss >= boss_spawn_threshold and
+		not boss_active and
+		current_boss == null and
+		not boss_warning_active and
+		not boss_spawn_delay_active
+	)
+
+func should_trigger_boss_spawn_delay() -> bool:
+	"""Check if boss spawn delay should be triggered"""
+	return (
+		kills_since_last_boss >= boss_spawn_threshold and
+		not boss_active and
+		current_boss == null and
+		not boss_warning_active and
+		not boss_spawn_delay_active
+	)
+
+func trigger_boss_spawn_delay():
+	"""Trigger the boss spawn delay system"""
+	boss_spawn_delay_active = true
+	boss_spawn_delay_timer = boss_spawn_delay_time
+	print("Boss spawn delay triggered! Warning will start in ", boss_spawn_delay_time, " seconds")
+
+func update_boss_spawn_delay(delta: float):
+	"""Update the boss spawn delay timer"""
+	if boss_spawn_delay_active:
+		boss_spawn_delay_timer -= delta
+		if boss_spawn_delay_timer <= 0:
+			boss_spawn_delay_active = false
+			boss_spawn_delay_timer = 0.0
+			trigger_boss_warning()
+			print("Boss spawn delay finished - starting warning now!")
+
+func trigger_boss_warning():
+	"""Trigger the boss warning system"""
+	boss_warning_active = true
+	boss_warning_timer = boss_warning_time
+	print("Boss warning triggered! Boss will spawn in ", boss_warning_time, " seconds")
+
+func update_boss_warning(delta: float):
+	"""Update the boss warning timer"""
+	if boss_warning_active:
+		boss_warning_timer -= delta
+		if boss_warning_timer <= 0:
+			boss_warning_active = false
+			boss_warning_timer = 0.0
+			spawn_boss()
+			print("Boss warning finished - spawning boss now!")
+
+func spawn_boss():
+	"""Spawn a boss enemy"""
+	if boss_active or current_boss != null:
+		return
+
+	print("Spawning boss level ", boss_level, " after ", kills_since_last_boss, " kills")
+
+	# Clear any remaining enemies before spawning boss
+	clear_enemies()
+
+	# Create boss enemy
+	var boss_scene = preload("res://scenes/BossEnemy.tscn")
+	current_boss = boss_scene.instantiate()
+
+	# Set boss properties
+	current_boss.set_boss_level(boss_level)
+	current_boss.set_difficulty(enemy_difficulty)
+	current_boss.set_sound_manager(sound_manager)
+
+	# Set debug info if active
+	if debug_mode_active || is_debug_ui_active():
+		current_boss.set_debug_info(true)
+
+	# Add to scene
+	add_child(current_boss)
+	enemies.append(current_boss)
+
+	# Mark boss as active
+	boss_active = true
+
+	# Play boss music or sound effect here if desired
+	print("Boss spawned! Level: ", boss_level, " - Life bubble is always active!")
+
+func get_boss_info() -> Dictionary:
+	"""Get current boss information for UI display"""
+	if current_boss and is_instance_valid(current_boss):
+		return current_boss.get_boss_info()
+	return {}
+
+func is_boss_active() -> bool:
+	"""Check if a boss is currently active"""
+	return boss_active and current_boss != null and is_instance_valid(current_boss)
+
+func get_kills_until_next_boss() -> int:
+	"""Get the number of kills until the next boss spawns"""
+	if boss_active:
+		return 0
+	return boss_spawn_threshold - kills_since_last_boss
+
+func is_boss_warning_active() -> bool:
+	"""Check if boss warning is currently active"""
+	return boss_warning_active
+
+func get_boss_warning_time_left() -> float:
+	"""Get the remaining time for boss warning"""
+	return boss_warning_timer
+
+func is_boss_spawn_delay_active() -> bool:
+	"""Check if boss spawn delay is currently active"""
+	return boss_spawn_delay_active
+
+func get_boss_spawn_delay_time_left() -> float:
+	"""Get the remaining time for boss spawn delay"""
+	return boss_spawn_delay_timer
 
 func update_background_scaling():
 	# Update scaling for all backgrounds to ensure they match the 920x950 window

@@ -29,6 +29,15 @@ var stop_movement: bool = true
 var can_shoot: bool = false # New flag to control shooting permission
 var is_invincible: bool = false # Debug invincibility mode
 
+# Life-bubble system (now permanent)
+var life_bubble_active: bool = true # Always active now
+var life_bubble_health: int = 3
+var max_life_bubble_health: int = 3
+var life_bubble_recovery_time: float = 2.0 # Time before bubble starts recovering
+var life_bubble_recovery_timer: float = 0.0
+var life_bubble_flash_timer: float = 0.0
+var life_bubble_flash_duration: float = 0.1
+
 # Power shot toggle cooldown
 var power_shot_toggle_cooldown: float = 0.0
 var power_shot_cooldown_time: float = 0.2 # 200ms cooldown to prevent rapid toggling
@@ -61,6 +70,9 @@ var sound_manager: Sound
 var screen_size: Vector2
 
 func _ready():
+	# Add to player group
+	add_to_group("player")
+
 	# Get screen size
 	screen_size = get_viewport().get_visible_rect().size
 
@@ -143,7 +155,7 @@ func setup_collision():
 	# Setup point collision area
 	if point_collision_area:
 		point_collision_area.collision_layer = 1
-		point_collision_area.collision_mask = 4 # Detect point bullets
+		point_collision_area.collision_mask = 4 + 16 # Detect point bullets and life bubble refills
 		point_collision_area.area_entered.connect(_on_point_collision)
 	else:
 		print("WARNING: point_collision_area not found!")
@@ -175,6 +187,9 @@ func _process(delta):
 
 	update_bullets(delta)
 	boundary_check()
+
+	# Update life-bubble system
+	update_life_bubble(delta)
 
 	if not is_colliding:
 		animate(delta)
@@ -406,6 +421,27 @@ func take_damage():
 		print("Player is invincible (debug mode) - no damage taken")
 		return
 
+	# Check if life bubble is active
+	if life_bubble_active and life_bubble_health > 0:
+		life_bubble_health -= 1
+		life_bubble_recovery_timer = life_bubble_recovery_time
+		life_bubble_flash_timer = life_bubble_flash_duration
+		print("Life bubble took damage! Health: ", life_bubble_health, "/", max_life_bubble_health)
+
+		# Visual feedback - flash the sprite
+		if sprite:
+			sprite.modulate = Color.RED
+
+		# If bubble is depleted, player takes actual damage
+		if life_bubble_health <= 0:
+			print("Life bubble depleted! Player taking actual damage!")
+			if not is_colliding:
+				is_colliding = true
+				sound_played = false
+				death_timer = 0.0
+		return
+
+	# Normal damage when no life bubble
 	if not is_colliding:
 		print("Player taking damage! Setting is_colliding = true")
 		is_colliding = true
@@ -425,6 +461,71 @@ func set_invincible(invincible: bool):
 			sprite.modulate = Color(1.0, 1.0, 1.0, 1.0) # Fully opaque
 			print("Player invincibility disabled - visual indicator cleared")
 
+func activate_life_bubble():
+	"""Activate the life-bubble system for boss fights"""
+	life_bubble_active = true
+	life_bubble_health = max_life_bubble_health
+	life_bubble_recovery_timer = 0.0
+	print("Life bubble activated! Health: ", life_bubble_health, "/", max_life_bubble_health)
+
+func deactivate_life_bubble():
+	"""Deactivate the life-bubble system"""
+	life_bubble_active = false
+	life_bubble_health = 0
+	life_bubble_recovery_timer = 0.0
+	print("Life bubble deactivated!")
+
+func refill_life_bubble(amount: int = 1):
+	"""Refill life bubble by specified amount"""
+	if life_bubble_health < max_life_bubble_health:
+		life_bubble_health = min(life_bubble_health + amount, max_life_bubble_health)
+		print("Life bubble refilled! Health: ", life_bubble_health, "/", max_life_bubble_health)
+		return true
+	return false
+
+func restore_life_bubble_full():
+	"""Fully restore life bubble to maximum health"""
+	if life_bubble_health < max_life_bubble_health:
+		life_bubble_health = max_life_bubble_health
+		life_bubble_recovery_timer = 0.0
+		print("Life bubble fully restored! Health: ", life_bubble_health, "/", max_life_bubble_health)
+		return true
+	return false
+
+func get_life_bubble_info() -> Dictionary:
+	"""Get life bubble information for UI display"""
+	return {
+		"active": life_bubble_active,
+		"health": life_bubble_health,
+		"max_health": max_life_bubble_health,
+		"recovery_time": life_bubble_recovery_timer
+	}
+
+func update_life_bubble(delta: float):
+	"""Update life bubble system"""
+	if not life_bubble_active:
+		return
+
+	# Handle recovery timer
+	if life_bubble_recovery_timer > 0:
+		life_bubble_recovery_timer -= delta
+		if life_bubble_recovery_timer <= 0 and life_bubble_health < max_life_bubble_health:
+			life_bubble_health += 1
+			life_bubble_recovery_timer = life_bubble_recovery_time
+			print("Life bubble recovered! Health: ", life_bubble_health, "/", max_life_bubble_health)
+
+	# Handle flash effect
+	if life_bubble_flash_timer > 0:
+		life_bubble_flash_timer -= delta
+		if life_bubble_flash_timer <= 0 and sprite:
+			sprite.modulate = Color.WHITE # Reset to normal color
+
+	# Visual bubble effect based on health
+	if sprite and life_bubble_health > 0:
+		var bubble_alpha = 0.3 + (float(life_bubble_health) / float(max_life_bubble_health)) * 0.4
+		var bubble_color = Color(0.5, 0.8, 1.0, bubble_alpha) # Light blue tint
+		sprite.modulate = sprite.modulate.lerp(bubble_color, 0.1)
+
 func _on_bullet_collision(area):
 	# Handle collision with enemy bullets only
 	# Only process collision if it's an enemy bullet (collision_layer = 2)
@@ -440,3 +541,7 @@ func _on_point_collision(area):
 		var main = get_parent()
 		if main.has_method("add_score"):
 			main.add_score(10)
+
+	# Handle collision with life bubble refills
+	elif area.has_method("collect_refill"):
+		area.collect_refill(self)

@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://bq5qgjkc4tqjy"]
+
+[ext_resource type="Script" path="res://scripts/BossEnemy.gd" id="1_x3l2c"]
+[ext_resource type="Texture2D" path="res://assets/textures/enemies/enemy_red_enemy_flap_strip.png" id="2_4v7kj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(60, 52)
+
+[node name="BossEnemy" type="Area2D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_x3l2c")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(2, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="DebugLabel" type="Label" parent="."]
+offset_left = -100.0
+offset_top = -80.0
+offset_right = 100.0
+offset_bottom = -20.0
+text = "BOSS"
+horizontal_alignment = 1
+vertical_alignment = 1

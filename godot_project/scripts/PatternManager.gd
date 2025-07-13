@@ -37,6 +37,10 @@ var enemy_owner: Enemy
 var sound_manager: Sound
 var rng: RandomNumberGenerator
 
+# Boss mode settings
+var boss_mode: bool = false
+var boss_pattern_intensity: float = 1.5
+
 # Signals
 signal pattern_started(pattern: BulletPattern)
 signal pattern_completed(pattern: BulletPattern)
@@ -185,6 +189,10 @@ func spawn_pattern(pattern_name: String, spawn_pos: Vector2, target_pos: Vector2
 
 	# Apply difficulty scaling
 	params.apply_difficulty_scaling(current_difficulty)
+
+	# Apply boss scaling if in boss mode
+	if boss_mode:
+		params = apply_boss_scaling(params)
 
 	# Add to scene
 	if enemy_owner:
@@ -526,5 +534,31 @@ func _on_pattern_completed(pattern: BulletPattern):
 		emit_signal("all_patterns_completed")
 
 func _on_difficulty_changed(new_difficulty: float):
+	"""Handle difficulty changes from DifficultyScaler"""
 	current_difficulty = new_difficulty
 	emit_signal("difficulty_changed", new_difficulty)
+	print("PatternManager difficulty updated to: ", new_difficulty)
+
+func set_boss_mode(enabled: bool):
+	"""Enable or disable boss mode for enhanced patterns"""
+	boss_mode = enabled
+	if enabled:
+		boss_pattern_intensity = 1.5
+		# Reduce pattern cooldown for bosses
+		min_pattern_interval = 0.5
+		max_pattern_interval = 1.5
+		print("Boss mode enabled - increased pattern intensity")
+	else:
+		boss_pattern_intensity = 1.0
+		# Restore normal pattern cooldown
+		min_pattern_interval = 1.0
+		max_pattern_interval = 3.0
+		print("Boss mode disabled - normal pattern intensity")
+
+func apply_boss_scaling(params: PatternParameters) -> PatternParameters:
+	"""Apply boss-specific scaling to pattern parameters"""
+	if boss_mode:
+		params.bullet_speed *= boss_pattern_intensity
+		params.bullet_density = int(params.bullet_density * boss_pattern_intensity)
+		params.spawn_rate *= boss_pattern_intensity
+	return params
