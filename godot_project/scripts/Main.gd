@@ -44,7 +44,7 @@ var high_score_background: Background
 @onready var game_over_container = $UI/GameOverContainer
 
 # Debug UI
-var star_pattern_debug_ui: StarPatternDebugUI
+var pattern_debug_ui: PatternDebugUI
 
 # Random number generator
 var rng = RandomNumberGenerator.new()
@@ -561,21 +561,21 @@ func toggle_enemy_debug_info():
 
 func setup_debug_ui():
 	"""Initialize the debug UI"""
-	# Load and instantiate the StarPatternDebugUI
-	var debug_ui_scene = preload("res://scenes/StarPatternDebugUI.tscn")
-	star_pattern_debug_ui = debug_ui_scene.instantiate()
+	# Load and instantiate the PatternDebugUI
+	var debug_ui_scene = preload("res://scenes/PatternDebugUI.tscn")
+	pattern_debug_ui = debug_ui_scene.instantiate()
 
 	# Add to UI layer
-	$UI.add_child(star_pattern_debug_ui)
+	$UI.add_child(pattern_debug_ui)
 
 	# Set reference to main scene
-	star_pattern_debug_ui.set_main_scene(self)
+	pattern_debug_ui.set_main_scene(self)
 
-	print("StarPatternDebugUI initialized - Press F2 to toggle")
+	print("PatternDebugUI initialized - Press F3 to toggle")
 
 func is_debug_ui_active() -> bool:
-	"""Check if the star pattern debug UI is currently active"""
-	return star_pattern_debug_ui != null and star_pattern_debug_ui.visible
+	"""Check if the pattern debug UI is currently active"""
+	return pattern_debug_ui != null and pattern_debug_ui.visible
 
 func pause_music():
 	"""Pause the game music"""
@@ -614,8 +614,8 @@ func set_player_can_shoot(can_shoot: bool):
 func _unhandled_input(event):
 	"""Handle unhandled input events"""
 	if event is InputEventKey and event.pressed:
-		# Toggle star pattern debug UI with F2
-		if event.keycode == KEY_F2:
-			if star_pattern_debug_ui:
-				star_pattern_debug_ui.toggle_visibility()
+		# Toggle pattern debug UI with F3
+		if event.keycode == KEY_F3:
+			if pattern_debug_ui:
+				pattern_debug_ui.toggle_visibility()
 			get_viewport().set_input_as_handled()

@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/TestPatternDebugUI.gd" id="1_test"]
+
+[node name="TestPatternDebugUI" type="Node2D"]
+script = ExtResource("1_test")
+
+[node name="Label" type="Label" parent="."]
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 850.0
+offset_bottom = 150.0
+text = "Pattern Debug UI Test Scene
+Press F3 to toggle Pattern Debug UI
+Press ESC to quit
+
+The Pattern Debug UI should appear when you press F3.
+Try changing parameters and testing different patterns!"
