@@ -108,7 +108,7 @@ func load_textures_deferred():
 func _process(delta):
 	# Update animation timers
 	glow_animation += delta * glow_speed
-	
+
 	# Update glow effect
 	if glow_sprite:
 		# Pulsing glow effect
@@ -117,14 +117,14 @@ func _process(delta):
 			glow_sprite.modulate = Color(1.0, 0.6, 0.1, glow_intensity) # Golden glow
 		else:
 			glow_sprite.modulate = Color(0.2, 1.0, 0.4, glow_intensity) # Green glow
-		
+
 		# Rotate the glow for extra effect
 		glow_sprite.rotation += delta * rotation_speed
-	
+
 	# Rotating the main sprite for buff effect
 	if sprite:
 		sprite.rotation += delta * rotation_speed * 0.5
-	
+
 	# Update lifetime
 	lifetime_timer -= delta
 	if lifetime_timer <= 0:
@@ -181,10 +181,10 @@ func collect_refill(player):
 	if success:
 		# Play collection effect with enhanced visuals
 		flash_timer = flash_duration
-		
+
 		# Create collection burst effect
 		create_collection_effect()
-		
+
 		if sprite:
 			sprite.modulate = Color.WHITE
 		if glow_sprite:
@@ -208,21 +208,21 @@ func create_collection_effect():
 		var particle = Sprite2D.new()
 		var particle_texture = create_particle_texture()
 		particle.texture = particle_texture
-		
+
 		if is_full_restore:
 			particle.modulate = Color(1.0, 0.8, 0.2, 0.8) # Golden particles
 		else:
 			particle.modulate = Color(0.4, 1.0, 0.6, 0.8) # Green particles
-		
+
 		particle.scale = Vector2(0.5, 0.5)
 		get_parent().add_child(particle)
 		particle.global_position = global_position
-		
+
 		# Animate particles spreading out
 		var angle = (i * 2 * PI) / 8
 		var direction = Vector2(cos(angle), sin(angle))
 		var target_pos = global_position + direction * 30
-		
+
 		var tween = create_tween()
 		tween.parallel().tween_property(particle, "global_position", target_pos, 0.5)
 		tween.parallel().tween_property(particle, "modulate:a", 0.0, 0.5)
@@ -232,19 +232,19 @@ func create_collection_effect():
 func create_particle_texture() -> Texture2D:
 	"""Create a small particle texture for the collection effect"""
 	var image = Image.create(8, 8, false, Image.FORMAT_RGBA8)
-	
+
 	# Create a small bright circle
 	for x in range(8):
 		for y in range(8):
 			var center = Vector2(4, 4)
 			var distance = Vector2(x, y).distance_to(center)
-			
+
 			if distance <= 3:
 				var intensity = 1.0 - (distance / 3.0)
 				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, intensity))
 			else:
 				image.set_pixel(x, y, Color.TRANSPARENT)
-	
+
 	var texture = ImageTexture.create_from_image(image)
 	return texture
 
@@ -263,7 +263,7 @@ func create_glow_effect():
 		add_child(glow_sprite)
 		# Put glow behind the main sprite
 		move_child(glow_sprite, 0)
-	
+
 	# Create a glowing circle texture
 	var glow_texture = create_glow_texture()
 	glow_sprite.texture = glow_texture
@@ -273,13 +273,13 @@ func create_glow_effect():
 func create_glow_texture() -> Texture2D:
 	"""Create a soft glowing circle texture"""
 	var image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
-	
+
 	# Create a soft gradient circle
 	for x in range(32):
 		for y in range(32):
 			var center = Vector2(16, 16)
 			var distance = Vector2(x, y).distance_to(center)
-			
+
 			if distance <= 15:
 				# Soft gradient from center to edge
 				var intensity = 1.0 - (distance / 15.0)
@@ -288,6 +288,6 @@ func create_glow_texture() -> Texture2D:
 				image.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
 			else:
 				image.set_pixel(x, y, Color.TRANSPARENT)
-	
+
 	var texture = ImageTexture.create_from_image(image)
 	return texture

@@ -21,7 +21,7 @@ var entry_delay_started: bool = false
 
 # Boss attack patterns
 var current_attack_pattern: int = 0
-var attack_patterns: Array[String] = ["circle", "spiral", "wave", "star", "star_outline"]
+var attack_patterns: Array[String] = ["circle", "spiral", "star", "star_outline"]
 var pattern_switch_timer: float = 0.0
 var pattern_switch_delay: float = 4.0
 
@@ -66,8 +66,8 @@ func _ready():
 	entry_delay_started = false
 
 	# Configure boss-specific shooting
-	shot_delay = 1.0 # Slower shooting than regular enemies
-	max_shot_delay = 1.0
+	shot_delay = 1.5 # Slower shooting than regular enemies
+	max_shot_delay = 1.5
 
 	# Set boss as invincible to debug enemies
 	set_meta("is_boss_enemy", true)
@@ -233,10 +233,10 @@ func fire_boss_attack(player: Player):
 	match pattern_name:
 		"circle":
 			params.bullet_density = 12 + (boss_level * 1)
-			params.bullet_speed = 80.0 + (boss_level * 5)
+			params.bullet_speed = 80.0 + (boss_level * 2)
 		"spiral":
 			params.bullet_density = 6 + boss_level
-			params.bullet_speed = 70.0 + (boss_level * 5)
+			params.bullet_speed = 70.0 + (boss_level * 3)
 			params.set_custom_param("attack_count", attack_count)
 			params.set_custom_param("enemy_position", position)
 		"wave":

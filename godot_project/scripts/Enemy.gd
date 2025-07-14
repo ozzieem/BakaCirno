@@ -119,7 +119,7 @@ func assign_pattern():
 		return
 
 	# Get all available patterns (excluding random)
-	var all_patterns = ["circle", "spiral", "wave", "star", "star_outline", "burst"]
+	var all_patterns = ["circle", "spiral", "wave", "star", "star_outline"]
 	var available_patterns = []
 
 	for pattern_name in all_patterns:

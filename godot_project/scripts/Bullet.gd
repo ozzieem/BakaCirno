@@ -80,14 +80,15 @@ func _on_area_entered(area):
 	elif collision_layer == 2 and area.collision_layer == 1:
 		is_visible = false
 
-func _on_body_entered(body):
+func _on_body_entered(_body):
 	# Handle collision with player body - only for enemy bullets
 	# Only enemy bullets (layer 2) can damage the player
-	if body.has_method("take_damage") and collision_layer == 2:
-		body.take_damage()
-		is_visible = false
+	# NOTE: Don't call take_damage() here as it's handled by the player's BulletCollisionArea
+	# to prevent double damage from the same bullet
+	if collision_layer == 2:
+		is_visible = false # Destroy the bullet but let the area collision handle damage
 	else:
-		is_visible = false # Still destroy the bullet, but don't damage player
+		is_visible = false # Still destroy the bullet
 
 func set_bullet_type(is_player_bullet: bool):
 	# Set collision layer based on bullet type

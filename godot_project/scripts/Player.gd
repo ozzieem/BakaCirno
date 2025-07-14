@@ -180,42 +180,42 @@ func setup_life_bubble_visuals():
 		life_bubble_container = Node2D.new()
 		life_bubble_container.name = "LifeBubbleContainer"
 		add_child(life_bubble_container)
-	
+
 	# Clear existing bubbles
 	bubble_sprites.clear()
 	for child in life_bubble_container.get_children():
 		child.queue_free()
-	
+
 	# Create bubble sprites for each life bubble
 	for i in range(max_life_bubble_health):
 		var bubble_sprite = Sprite2D.new()
-		
+
 		# Create a circular bubble texture
 		var bubble_texture = create_bubble_texture()
 		bubble_sprite.texture = bubble_texture
-		
+
 		# Set initial properties
 		bubble_sprite.scale = Vector2(0.8, 0.8)
 		bubble_sprite.modulate = Color(0.4, 0.8, 1.0, 0.7) # Light blue with transparency
-		
+
 		# Position bubbles in a circle around the player
 		var angle = (i * 2 * PI) / max_life_bubble_health
 		var offset = Vector2(cos(angle), sin(angle)) * bubble_orbit_radius
 		bubble_sprite.position = offset
-		
+
 		life_bubble_container.add_child(bubble_sprite)
 		bubble_sprites.append(bubble_sprite)
 
 func create_bubble_texture() -> Texture2D:
 	"""Create a bubble texture programmatically"""
 	var image = Image.create(24, 24, false, Image.FORMAT_RGBA8)
-	
+
 	# Create a circular bubble with gradient
 	for x in range(24):
 		for y in range(24):
 			var center = Vector2(12, 12)
 			var distance = Vector2(x, y).distance_to(center)
-			
+
 			if distance <= 11:
 				# Inner bright circle
 				if distance <= 8:
@@ -227,7 +227,7 @@ func create_bubble_texture() -> Texture2D:
 					image.set_pixel(x, y, Color(0.5, 0.8, 1.0, alpha))
 			else:
 				image.set_pixel(x, y, Color.TRANSPARENT)
-	
+
 	var texture = ImageTexture.create_from_image(image)
 	return texture
 
@@ -261,7 +261,7 @@ func _process(delta):
 
 	# Update life-bubble system
 	update_life_bubble(delta)
-	
+
 	# Update bubble visuals
 	update_bubble_visuals(delta)
 
@@ -529,7 +529,7 @@ func trigger_bubble_damage_effect():
 	"""Trigger visual effect when a bubble is damaged"""
 	if not life_bubble_container or bubble_sprites.size() == 0:
 		return
-	
+
 	# Find the bubble that was just damaged and create destruction effect
 	var damaged_bubble_index = life_bubble_health # The bubble that was just destroyed
 	if damaged_bubble_index < bubble_sprites.size():
@@ -549,12 +549,12 @@ func create_bubble_shatter_effect(shatter_position: Vector2):
 		fragment.scale = Vector2(0.3, 0.3)
 		get_parent().add_child(fragment)
 		fragment.global_position = shatter_position
-		
+
 		# Random direction for fragments
 		var angle = (i * PI / 3) + randf() * PI / 6 # Spread fragments around
 		var direction = Vector2(cos(angle), sin(angle))
 		var target_pos = shatter_position + direction * 20
-		
+
 		var tween = create_tween()
 		tween.parallel().tween_property(fragment, "global_position", target_pos, 0.4)
 		tween.parallel().tween_property(fragment, "modulate:a", 0.0, 0.4)
@@ -564,7 +564,7 @@ func create_bubble_shatter_effect(shatter_position: Vector2):
 func create_fragment_texture() -> Texture2D:
 	"""Create a small fragment texture for bubble destruction"""
 	var image = Image.create(6, 6, false, Image.FORMAT_RGBA8)
-	
+
 	# Create an irregular fragment shape
 	var pixels = [
 		Vector2(2, 1), Vector2(3, 1), Vector2(4, 1),
@@ -572,11 +572,11 @@ func create_fragment_texture() -> Texture2D:
 		Vector2(2, 3), Vector2(3, 3), Vector2(4, 3),
 		Vector2(3, 4)
 	]
-	
+
 	for pixel in pixels:
 		if pixel.x >= 0 and pixel.x < 6 and pixel.y >= 0 and pixel.y < 6:
 			image.set_pixel(int(pixel.x), int(pixel.y), Color(1.0, 1.0, 1.0, 0.8))
-	
+
 	var texture = ImageTexture.create_from_image(image)
 	return texture
 
@@ -612,7 +612,7 @@ func refill_life_bubble(amount: int = 1):
 	if life_bubble_health < max_life_bubble_health:
 		life_bubble_health = min(life_bubble_health + amount, max_life_bubble_health)
 		print("Life bubble refilled! Health: ", life_bubble_health, "/", max_life_bubble_health)
-		
+
 		# Visual feedback for refill
 		trigger_bubble_refill_effect()
 		return true
@@ -624,7 +624,7 @@ func restore_life_bubble_full():
 		life_bubble_health = max_life_bubble_health
 		life_bubble_recovery_timer = 0.0
 		print("Life bubble fully restored! Health: ", life_bubble_health, "/", max_life_bubble_health)
-		
+
 		# Visual feedback for full restore
 		trigger_bubble_refill_effect()
 		return true
@@ -672,18 +672,18 @@ func update_bubble_visuals(delta: float):
 	"""Update visual bubble effects around the player"""
 	if not life_bubble_active or not life_bubble_container:
 		return
-	
+
 	# Update animation timers
 	bubble_scale_animation += delta * bubble_pulse_speed
 	if life_bubble_container:
 		life_bubble_container.rotation += delta * bubble_rotation_speed
-	
+
 	# Update each bubble sprite based on current health
 	for i in range(bubble_sprites.size()):
 		var bubble = bubble_sprites[i]
 		if not bubble or not is_instance_valid(bubble):
 			continue
-			
+
 		# Show/hide bubbles based on current health
 		if i < life_bubble_health:
 			bubble.visible = true
