@@ -633,9 +633,16 @@ func spawn_boss():
 	# Clear any remaining enemies before spawning boss
 	clear_enemies()
 
+	# Disable player shooting during boss entry sequence
+	player.set_can_shoot(false)
+	print("Player shooting disabled for boss entry sequence")
+
 	# Create boss enemy
 	var boss_scene = preload("res://scenes/BossEnemy.tscn")
 	current_boss = boss_scene.instantiate()
+
+	# Connect to boss entry completion signal
+	current_boss.boss_entry_complete.connect(_on_boss_entry_complete)
 
 	# Set boss properties
 	current_boss.set_boss_level(boss_level)
@@ -654,7 +661,13 @@ func spawn_boss():
 	boss_active = true
 
 	# Play boss music or sound effect here if desired
-	print("Boss spawned! Level: ", boss_level, " - Life bubble is always active!")
+	print("Boss spawned! Level: ", boss_level, " - Player shooting paused until entry complete!")
+
+func _on_boss_entry_complete():
+	"""Called when boss entry sequence is complete - re-enable player shooting"""
+	if player and not is_debug_ui_active():
+		player.set_can_shoot(true)
+		print("Boss entry complete - Player shooting re-enabled!")
 
 func get_boss_info() -> Dictionary:
 	"""Get current boss information for UI display"""

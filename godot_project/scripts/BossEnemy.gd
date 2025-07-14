@@ -1,6 +1,9 @@
 extends Enemy
 class_name BossEnemy
 
+# Boss entry completion signal
+signal boss_entry_complete
+
 # Boss-specific properties
 var boss_health: float = 600.0
 var max_boss_health: float = 600.0
@@ -171,6 +174,9 @@ func complete_entry_sequence():
 
 	# Reset movement timer for patterns
 	movement_timer = 0.0
+
+	# Emit signal to notify main scene that entry is complete
+	boss_entry_complete.emit()
 
 	print("Boss entry sequence complete - now vulnerable and active!")
 
