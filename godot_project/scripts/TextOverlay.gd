@@ -194,7 +194,7 @@ func _draw():
 
 	# Draw control instructions (matching C# timing: Time <= 4)
 	if time <= 4.0:
-		var control_text = "Control character with WASD, shoot by holding down SPACE"
+		var control_text = "Move with WASD or Arrow Keys, hold Shift to move slower!"
 		var control_color = Color.FOREST_GREEN
 		draw_string_outline(font, control_info_position, control_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline_size, outline_color)
 		draw_string(font, control_info_position, control_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, control_color)

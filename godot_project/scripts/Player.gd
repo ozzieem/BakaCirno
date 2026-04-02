@@ -14,7 +14,7 @@ var power_shot_texture: Texture2D
 var current_bullet_texture: Texture2D
 
 # Player properties
-var movement_speed: float = 300.0 # pixels per second - base movement speed
+var movement_speed: float = 250.0 # pixels per second - base movement speed
 var precision_movement_speed: float = 120.0 # pixels per second - precision movement speed
 var bullet_speed: int = 240 # pixels per second
 var max_bullet_delay: float = 0.3 # seconds between shots (slower auto-fire)
@@ -717,4 +717,4 @@ func _on_point_collision(area):
 
 	# Handle collision with life bubble refills
 	elif area.has_method("collect_refill"):
-		area.collect_refill(self)
+		area.collect_refill(self )
